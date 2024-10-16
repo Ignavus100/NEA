@@ -1,4 +1,5 @@
 import polygon
+from pprint import pp
 
 client = polygon.RESTClient("DUEYmzwA2R9d8l5I18mNdycBZuHHYmXn")
 
@@ -13,4 +14,4 @@ for a in client.list_aggs(
 ):
     aggs.append(a)
 
-print(aggs)
+pp(aggs)
