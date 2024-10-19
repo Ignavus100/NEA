@@ -8,8 +8,8 @@ for a in client.list_aggs(
     "AAPL",
     1,
     "minute",
-    "2024-10-15",
-    "2024-10-16",
+    "1729172815270",
+    "1729173013946",
     limit=5000,
 ):
     aggs.append(a)
