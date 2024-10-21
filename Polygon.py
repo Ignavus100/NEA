@@ -1,52 +1,51 @@
 import polygon
-from pprint import pp
-import matplotlib
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 plt.style.use("dark_background")
-import numpy as np
-from datetime import datetime
 
 client = polygon.RESTClient("DUEYmzwA2R9d8l5I18mNdycBZuHHYmXn")
+def GraphData():
 
-aggs = []
-start = "2024-10-17"
-end = "2024-10-18"
-for a in client.list_aggs(
-    "AAPL",
-    1,
-    "hour",
-    start,
-    end,
-    limit=5000,
-):
-    aggs.append(a)
+    #OC-Get user input
+    aggs = []
+    start = "2024-10-17"
+    end = "2024-10-18"
+    ticket = input("the ticket you would like to trade > ")
+    timeframe = "hour"
 
-#plt.xlim(0, 10)
-p = []
-def animate(i):
-    #plt.cla())
-    data = aggs[i]
-    p.append(data.timestamp)
-    q1 = min(data.open, data.close)
-    q3 = max(data.open, data.close)
-    x = datetime.fromtimestamp(int(data.timestamp)/1000)
-    plt.boxplot([data.low, q1, data.close, q3, data.high], positions=[data.timestamp], widths=3600000)
-    
-#    x = datetime.fromtimestamp(int(data.timestamp)/1000)
-#    y = data.open
+    #OC-request from API
+    for a in client.list_aggs(
+        ticket,
+        1,
+        timeframe,
+        start,
+        end,
+        limit=5000,
+    ):
+        aggs.append(a)
 
-#    plt.plot(x, y, marker = ".")
-#    y = data.close
-#    plt.plot(x, y, marker = ".")
-#    plt.fill_between(x, data.open, data.close)
+    #OC-animation function that takes counter i and plots the data given from the API as a box plot
+    def animate(i):
+        #plt.cla())
+        data = aggs[i]
+        p.append(data.timestamp)
+        q1 = min(data.open, data.close)
+        q3 = max(data.open, data.close)
+        if data.open > data.close:
+            plt.boxplot([data.low, q1, data.close, q3, data.high], positions=[data.timestamp], widths=3000000, patch_artist=True, showfliers=False, boxprops=dict(facecolor="red", color="red"), whiskerprops=dict(color="red"), capprops=dict(color="red"), medianprops=dict(color="red"))
+        else:
+            plt.boxplot([data.low, q1, data.close, q3, data.high], positions=[data.timestamp], widths=3000000, patch_artist=True, showfliers=False, boxprops=dict(facecolor="green", color="green"), whiskerprops=dict(color="green"), capprops=dict(color="green"), medianprops=dict(color="green"))
 
-plt.xlabel("Date and Time")
-plt.ylabel("Price")
-plt.title(f"APPL on {start}")
-ani = FuncAnimation(plt.gcf(), animate, interval = 1000, frames = 500, repeat = False)
+    #OC-label axis and graph
+    plt.xlabel("Date and Time")
+    plt.ylabel("Price")
+    plt.title(f"{ticket} on {start}") 
+    p=[]
+    #OC-start the animation
+    ani = FuncAnimation(plt.gcf(), animate, interval = 1000, frames = 500, repeat = False)
 
-#for i in range(len(aggs)):
- #   ax.plot(aggs[i].timestamp, aggs[i].close, markersize=100)
-plt.tight_layout()
-plt.show()
+    #OC-show the graph
+    plt.tight_layout()
+    plt.show()
+
+GraphData()
