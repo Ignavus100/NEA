@@ -8,8 +8,8 @@ def GraphData():
 
     #OC-Get user input
     aggs = []
-    start = "2024-10-17"
-    end = "2024-10-18"
+    start = "2024-10-20"
+    end = "2024-10-21"
     ticket = input("the ticket you would like to trade > ")
     timeframe = "hour"
 
@@ -26,21 +26,33 @@ def GraphData():
 
     #OC-animation function that takes counter i and plots the data given from the API as a box plot
     def animate(i):
-        #plt.cla())
+        plt.cla()
         data = aggs[i]
         p.append(data.timestamp)
         q1 = min(data.open, data.close)
         q3 = max(data.open, data.close)
-        if data.open > data.close:
-            plt.boxplot([data.low, q1, data.close, q3, data.high], positions=[data.timestamp], widths=3000000, patch_artist=True, showfliers=False, boxprops=dict(facecolor="red", color="red"), whiskerprops=dict(color="red"), capprops=dict(color="red"), medianprops=dict(color="red"))
-        else:
-            plt.boxplot([data.low, q1, data.close, q3, data.high], positions=[data.timestamp], widths=3000000, patch_artist=True, showfliers=False, boxprops=dict(facecolor="green", color="green"), whiskerprops=dict(color="green"), capprops=dict(color="green"), medianprops=dict(color="green"))
+        points.append([data.low, q1, data.close, q3, data.high])
+        for i in range(len(points)):
+            if aggs[i].open > aggs[i].close:
+                plt.boxplot(points[i], positions=[p[i]], widths=3000000, patch_artist=True, showfliers=False, 
+                            boxprops=dict(facecolor="red", color="red"), 
+                            whiskerprops=dict(color="red"), 
+                            capprops=dict(color="red"), 
+                            medianprops=dict(color="red"))
+            else:
+                plt.boxplot(points[i], positions=[p[i]], widths=3000000, patch_artist=True, showfliers=False, 
+                            boxprops=dict(facecolor="green", color="green"), 
+                            whiskerprops=dict(color="green"), 
+                            capprops=dict(color="green"), 
+                            medianprops=dict(color="green"))
+            
 
     #OC-label axis and graph
     plt.xlabel("Date and Time")
     plt.ylabel("Price")
     plt.title(f"{ticket} on {start}") 
     p=[]
+    points = []
     #OC-start the animation
     ani = FuncAnimation(plt.gcf(), animate, interval = 1000, frames = 500, repeat = False)
 
