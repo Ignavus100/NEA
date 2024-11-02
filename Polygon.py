@@ -22,16 +22,18 @@ class UpdateData():
     def NewHigh(self, val):
         self.highest = val
 
-    def NewBar(self):
+    def NewBar(self, low, high):
         self.bars += 1
+        self.lowest = low
+        self.highest = high
 
 
 def GraphData():
 
     #OC-Get user input
     aggs = []
-    start = "1726095600000"
-    end = "1726105600000"
+    start = "2024-10-20"
+    end = "2024-10-21"
     ticket = input("the ticket you would like to trade > ").upper()
     timeframe = "minute"
 
@@ -55,15 +57,15 @@ def GraphData():
         #OC-checking the timeframe gaps
         if (aggs[data.currentBase].timestamp + 1000000) < currentPoint.timestamp:
             data.NewBase(i)
-            data.NewBar()
+            data.NewBar(aggs[i].low, aggs[i].high)
 
         #OC-defining the upper and lower quartiles
-        lq = min(aggs[data.currentBase].open, currentPoint.close)
+        lq = min(aggs[data.currentBase].open, aggs[i].close)
         if lq == aggs[data.currentBase].open:
             bullish = False
         else:
             bullish = True
-        uq = max(aggs[data.currentBase].open, currentPoint.close)
+        uq = max(aggs[data.currentBase].open, aggs[i].close)
 
         #OC-making new bounds
         if data.lowest > aggs[i].low:
@@ -80,18 +82,18 @@ def GraphData():
         #OC-making the bars
         for j in range(len(points)):
             if points[j][5]:
-                plt.boxplot(points[j], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=False,
+                plt.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=False,
                             boxprops=dict(facecolor="red", color="red"),
                             whiskerprops=dict(color="red"),
                             capprops=dict(color="red"),
-                            medianprops=dict(color="red"))
+                            medianprops=dict(color="white"))
 
             else:
-                plt.boxplot(points[j], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=False, 
+                plt.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=False, 
                             boxprops=dict(facecolor="green", color="green"), 
                             whiskerprops=dict(color="green"), 
                             capprops=dict(color="green"), 
-                            medianprops=dict(color="green"))
+                            medianprops=dict(color="white"))
 
     #OC-label axis and graph
     plt.xlabel("Date and Time")
@@ -102,7 +104,7 @@ def GraphData():
     data = UpdateData(0, aggs[0].low, aggs[0].high, 0)
 
     #OC-start the animation
-    ani = FuncAnimation(plt.gcf(), animate, fargs=(data,), interval = 1000, frames = 500, repeat = False)
+    ani = FuncAnimation(plt.gcf(), animate, fargs=(data,), interval = 1000, frames = 1000, repeat = False)
 
     #OC-show the graph
     
