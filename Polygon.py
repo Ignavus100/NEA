@@ -82,14 +82,14 @@ def GraphData():
         #OC-making the bars
         for j in range(len(points)):
             if points[j][5]:
-                plt.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=False,
+                plt.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=False, showcaps=False,
                             boxprops=dict(facecolor="red", color="red"),
                             whiskerprops=dict(color="red"),
                             capprops=dict(color="red"),
                             medianprops=dict(color="red"))
 
             else:
-                plt.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=False, 
+                plt.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=False, showcaps=False,
                             boxprops=dict(facecolor="green", color="green"), 
                             whiskerprops=dict(color="green"), 
                             capprops=dict(color="green"), 
