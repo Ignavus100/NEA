@@ -86,14 +86,14 @@ def GraphData():
                             boxprops=dict(facecolor="red", color="red"),
                             whiskerprops=dict(color="red"),
                             capprops=dict(color="red"),
-                            medianprops=dict(color="white"))
+                            medianprops=dict(color="red"))
 
             else:
                 plt.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=False, 
                             boxprops=dict(facecolor="green", color="green"), 
                             whiskerprops=dict(color="green"), 
                             capprops=dict(color="green"), 
-                            medianprops=dict(color="white"))
+                            medianprops=dict(color="green"))
 
     #OC-label axis and graph
     plt.xlabel("Date and Time")
