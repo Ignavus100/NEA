@@ -100,6 +100,7 @@ def GraphData():
     plt.ylabel("Price")
     plt.title(f"{ticket} on {start}")
     plt.gca().set_facecolor("#171b26")
+    plt.gcf().set_facecolor("#171b26")
     p=[]
     points = []
     data = UpdateData(0, aggs[0].low, aggs[0].high, 0)
