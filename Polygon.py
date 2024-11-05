@@ -54,7 +54,7 @@ def GraphData():
         currentPoint = aggs[i]
         p.append(currentPoint.timestamp)
 
-        #OC-checking the timeframe gaps
+        #OC-checking the timeframe gaps and creating a new bar if nececary
         if (aggs[data.currentBase].timestamp + 3600000) < currentPoint.timestamp:
             data.NewBase(i)
             data.NewBar(aggs[i].low, aggs[i].high)
@@ -95,7 +95,7 @@ def GraphData():
                             capprops=dict(color="#089981"), 
                             medianprops=dict(color="#089981"))
 
-    #OC-label axis and graph
+    #OC-label axis and graph and adding colour
     plt.xlabel("Date and Time")
     plt.ylabel("Price")
     plt.title(f"{ticket} on {start}")
