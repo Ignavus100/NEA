@@ -3,7 +3,6 @@ from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 plt.style.use("dark_background")
 import functools
-import numpy as np
 
 client = polygon.RESTClient("DUEYmzwA2R9d8l5I18mNdycBZuHHYmXn")
 
@@ -100,6 +99,7 @@ def GraphData():
     plt.xlabel("Date and Time")
     plt.ylabel("Price")
     plt.title(f"{ticket} on {start}")
+    plt.gca().set_facecolor("#171b26")
     p=[]
     points = []
     data = UpdateData(0, aggs[0].low, aggs[0].high, 0)
