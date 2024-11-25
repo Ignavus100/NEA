@@ -2,16 +2,18 @@ import polygon
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 plt.style.use("dark_background")
-import functools
+from testLine import *
 
 client = polygon.RESTClient("DUEYmzwA2R9d8l5I18mNdycBZuHHYmXn")
 
+#OC-class to track data outside the animate function so it can be passed without complications
 class UpdateData():
     def __init__(self, currentBase, lowest, highest, bars):
         self.currentBase = currentBase
         self.lowest = lowest
         self.highest = highest
         self.bars = bars
+        self.__barsPos = []
 
     def NewBase(self, i):
         self.currentBase = i
@@ -22,7 +24,8 @@ class UpdateData():
     def NewHigh(self, val):
         self.highest = val
 
-    def NewBar(self, low, high):
+    def NewBar(self, low, high, time):
+        self.__barsPos.append(time)
         self.bars += 1
         self.lowest = low
         self.highest = high
@@ -30,7 +33,7 @@ class UpdateData():
 
 def GraphData():
 
-    #OC-Get user input
+    #OC-Get user input for bars
     aggs = []
     start = "2024-10-20"
     end = "2024-10-21"
@@ -57,7 +60,7 @@ def GraphData():
         #OC-checking the timeframe gaps and creating a new bar if nececary
         if (aggs[data.currentBase].timestamp + 3600000) < currentPoint.timestamp:
             data.NewBase(i)
-            data.NewBar(aggs[i].low, aggs[i].high)
+            data.NewBar(aggs[i].low, aggs[i].high, aggs[i].timestamp)
 
         #OC-defining the upper and lower quartiles
         lq = min(aggs[data.currentBase-1].close, aggs[i].close)
@@ -79,7 +82,7 @@ def GraphData():
         except:
             points.append([data.lowest, lq, aggs[data.currentBase - 1].close, uq, data.highest, bullish])
 
-        #OC-making the bars
+        #OC-making the bars the correct colour and size
         for j in range(len(points)):
             if points[j][5]:
                 plt.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=True, showcaps=False, whis=(0, 100),
@@ -109,8 +112,7 @@ def GraphData():
     ani = FuncAnimation(plt.gcf(), animate, fargs=(data,), interval = 1000, frames = 1000, repeat = False)
 
     #OC-show the graph
-    
-
     plt.show()
 
+#OC-run graphing function
 GraphData()
