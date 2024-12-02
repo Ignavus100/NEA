@@ -2,7 +2,7 @@ import polygon
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 plt.style.use("dark_background")
-from testLine import *
+from RSI import *
 
 client = polygon.RESTClient("DUEYmzwA2R9d8l5I18mNdycBZuHHYmXn")
 
@@ -14,6 +14,9 @@ class UpdateData():
         self.highest = highest
         self.bars = bars
         self.__barsPos = []
+        self.__AvgHigh = 0
+        self.__AvgLow = 0
+        self.__AvgCount = 0
 
     def NewBase(self, i):
         self.currentBase = i
@@ -29,6 +32,12 @@ class UpdateData():
         self.bars += 1
         self.lowest = low
         self.highest = high
+
+    def NewAvg(self, low, high):
+        self.__AvgHigh = ((self.__AvgHigh * self.__AvgCount) + high)/(self.__AvgCount+1)
+        self.__AvgLow = ((self.__AvgLow * self.__AvgCount) + low)/(self.__AvgCount + 1)
+        self.__AvgCount += 1
+
 
 
 def GraphData():
@@ -56,6 +65,9 @@ def GraphData():
         plt.cla()
         currentPoint = aggs[i]
         p.append(currentPoint.timestamp)
+
+        #OC-making new average vals for the trendlines
+        data.NewAvg(aggs[i].low, aggs[i].high)
 
         #OC-checking the timeframe gaps and creating a new bar if nececary
         if (aggs[data.currentBase].timestamp + 3600000) < currentPoint.timestamp:
