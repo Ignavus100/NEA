@@ -17,10 +17,13 @@ class UpdateData():
         self.highest = highest
         self.bars = bars
         self.__barsPos = []
-        self.__High = []
-        self.__Low = []
-        self.__AvgCount = 0
-        self.__AvgContents = []
+        self.__Gain = []
+        self.__Loss = []
+        self.__FirstRun = True
+        self.AvgGain = 0
+        self.AvgLoss = 0
+        self.xVal = []
+        self.RSI = []
 
     def NewBase(self, i):
         self.currentBase = i
@@ -38,15 +41,31 @@ class UpdateData():
         self.highest = high
 
     def NewVal(self, low, high):
-        #TODO make it so that the highs and lows go into arrays
-        self.__AvgHigh = ((self.__AvgHigh * self.__AvgCount) + high)/(self.__AvgCount+1)
-        self.__AvgLow = ((self.__AvgLow * self.__AvgCount) + low)/(self.__AvgCount + 1)
-        self.__AvgCount += 1
+        self.__Loss.append(low)
+        self.__Gain.append(high)
 
     def NewAvg(self):
-        #TODO calculate the average (called every 14 updates) and update the RSI based on the formula
-        self.__AvgHigh.sort()
-        high = self.__AvgHigh[-1]
+        if self.__FirstRun:
+            total = 0
+            for i in self.__Gain:
+                total += i
+            self.AvgGain = total / 14
+            self.__Gain = []
+
+            total = 0
+            for i in self.__Loss:
+                total += i
+            self.AvgLoss = total / 14
+            self.__Loss = []
+
+            self.__FirstRun = False
+        
+        else:
+            self.AvgGain = (((self.AvgGain)*13) + self.__Gain[-1])/14
+            self.AvgLoss = (((self.AvgLoss)*13) + self.__Loss[-1])/14
+
+            self.__Loss = []
+            self.__Gain = []
 
 
 def GraphData():
@@ -71,34 +90,45 @@ def GraphData():
 
     #OC-animation function that takes counter i and plots the data given from the API as a box plot
     def animate(i, data):
-        plt.cla()
+        #fig, (ax1, ax2) = plt.subplots(2)
+        ax1.cla()
+        ax2.cla()
+  
         currentPoint = aggs[i]
         p.append(currentPoint.timestamp)
 
-        #OC-making new average vals for the trendlines
-        if i % 14 == 0:
-            data.NewVal(aggs[i].low, aggs[i].high)
-        else:
+        #OC-making new average vals for the trendlines for iterations past the 14 threshold and graphing the RSI
+        if i >= 14:
+            RSI(data, i)
+            ax2.plot(data.xVal, data.RSI)
             data.NewAvg()
+
+        #OC-applying the new values for gain and loss for RSI
+        if currentPoint.close > currentPoint.open:
+            data.NewVal(0, (currentPoint.close - currentPoint.open))
+        elif currentPoint.close < currentPoint.open:
+            data.NewVal((currentPoint.open - currentPoint.close), 0)
+        else:
+            data.NewVal(0, 0)
 
         #OC-checking the timeframe gaps and creating a new bar if nececary
         if (aggs[data.currentBase].timestamp + 3600000) < currentPoint.timestamp:
             data.NewBase(i)
-            data.NewBar(aggs[i].low, aggs[i].high, aggs[i].timestamp)
+            data.NewBar(currentPoint.low, currentPoint.high, currentPoint.timestamp)
 
         #OC-defining the upper and lower quartiles
-        lq = min(aggs[data.currentBase-1].close, aggs[i].close)
+        lq = min(aggs[data.currentBase-1].close, currentPoint.close)
         if lq == aggs[data.currentBase-1].close:
             bullish = False
         else:
             bullish = True
-        uq = max(aggs[data.currentBase -1 ].close, aggs[i].close)
+        uq = max(aggs[data.currentBase -1 ].close, currentPoint.close)
 
         #OC-making new bounds
-        if data.lowest > aggs[i].low:
-            data.NewLow(aggs[i].low)
-        if data.highest < aggs[i].high:
-            data.NewHigh(aggs[i].high)
+        if data.lowest > currentPoint.low:
+            data.NewLow(currentPoint.low)
+        if data.highest < currentPoint.high:
+            data.NewHigh(currentPoint.high)
 
         #OC-adding the bar to points in the position of how many bars there are
         try:
@@ -109,31 +139,33 @@ def GraphData():
         #OC-making the bars the correct colour and size
         for j in range(len(points)):
             if points[j][5]:
-                plt.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=True, showcaps=False, whis=(0, 100),
+                ax1.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=True, showcaps=False, whis=(0, 100),
                             boxprops=dict(facecolor="#f23645", color="#f23645"),
                             whiskerprops=dict(color="#f23645"),
                             capprops=dict(color="#f23645"),
                             medianprops=dict(color="#f23645"))
 
             else:
-                plt.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=True, showcaps=False, whis=(0, 100),
+                ax1.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=True, showcaps=False, whis=(0, 100),
                             boxprops=dict(facecolor="#089981", color="#089981"), 
                             whiskerprops=dict(color="#089981"), 
                             capprops=dict(color="#089981"), 
                             medianprops=dict(color="#089981"))
 
     #OC-label axis and graph and adding colour
-    plt.xlabel("Date and Time")
-    plt.ylabel("Price")
-    plt.title(f"{ticket} on {start}")
-    plt.gca().set_facecolor("#171b26")
-    plt.gcf().set_facecolor("#171b26")
+    fig, (ax1, ax2) = plt.subplots(2)
+    #ax1._label("Date and Time")
+    #ax1.ylabel("Price")
+    #fig.title(f"{ticket} on {start}")
+    #fig.gca().set_facecolor("#171b26")
+    #fig.gcf().set_facecolor("#171b26")
     p=[]
     points = []
     data = UpdateData(0, aggs[0].low, aggs[0].high, 0)
 
+
     #OC-start the animation
-    ani = FuncAnimation(plt.gcf(), animate, fargs=(data,), interval = 1000, frames = 1000, repeat = False)
+    ani = FuncAnimation(fig, animate, fargs=(data,), interval = 1000, frames = 1000, repeat = False)
 
     #OC-show the graph
     plt.show()
