@@ -1,3 +1,6 @@
+#TODO sort the RSI graphing
+
+
 import polygon
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
@@ -14,9 +17,10 @@ class UpdateData():
         self.highest = highest
         self.bars = bars
         self.__barsPos = []
-        self.__AvgHigh = 0
-        self.__AvgLow = 0
+        self.__High = []
+        self.__Low = []
         self.__AvgCount = 0
+        self.__AvgContents = []
 
     def NewBase(self, i):
         self.currentBase = i
@@ -33,11 +37,16 @@ class UpdateData():
         self.lowest = low
         self.highest = high
 
-    def NewAvg(self, low, high):
+    def NewVal(self, low, high):
+        #TODO make it so that the highs and lows go into arrays
         self.__AvgHigh = ((self.__AvgHigh * self.__AvgCount) + high)/(self.__AvgCount+1)
         self.__AvgLow = ((self.__AvgLow * self.__AvgCount) + low)/(self.__AvgCount + 1)
         self.__AvgCount += 1
 
+    def NewAvg(self):
+        #TODO calculate the average (called every 14 updates) and update the RSI based on the formula
+        self.__AvgHigh.sort()
+        high = self.__AvgHigh[-1]
 
 
 def GraphData():
@@ -67,7 +76,10 @@ def GraphData():
         p.append(currentPoint.timestamp)
 
         #OC-making new average vals for the trendlines
-        data.NewAvg(aggs[i].low, aggs[i].high)
+        if i % 14 == 0:
+            data.NewVal(aggs[i].low, aggs[i].high)
+        else:
+            data.NewAvg()
 
         #OC-checking the timeframe gaps and creating a new bar if nececary
         if (aggs[data.currentBase].timestamp + 3600000) < currentPoint.timestamp:
