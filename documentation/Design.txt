@@ -1,0 +1,11 @@
+Analysis
+    -Can all be done in python
+    -Using AI which already exists
+    -All legal
+    -It has a variable timeframe but all within 2 years
+
+Design
+    -Make an AI that can take verbal statergies and implement them in my code
+    -Give the user a success rate based on past apperances in the data from Polygon API
+    -Return the code that they can use themselves in another software based on the success rates
+    -Give an option to watch the program in action on a graph
