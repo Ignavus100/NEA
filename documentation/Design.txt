@@ -7,5 +7,9 @@ Analysis
 Design
     -Make an AI that can take verbal statergies and implement them in my code
     -Give the user a success rate based on past apperances in the data from Polygon API
-    -Return the code that they can use themselves in another software based on the success rates
+    -Return the code that they can use themselves in another software (use pine script for tradingview as it is the biggest platform) based on the success rates
     -Give an option to watch the program in action on a graph
+    -Give the percent success based on the previous runs
+    -When running the version that they can see, add relevant graphs e.g. RSI compared with another graph
+
+    -Give practice questions on fluctuations to get an estimate of the persons accuracy

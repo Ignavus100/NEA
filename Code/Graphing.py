@@ -1,6 +1,3 @@
-#TODO sort the RSI graphing
-
-
 import polygon
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
