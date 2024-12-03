@@ -72,8 +72,8 @@ def GraphData():
 
     #OC-Get user input for bars
     aggs = []
-    start = "2024-10-20"
-    end = "2024-10-21"
+    start = "2024-11-29"
+    end = "2024-11-30"
     ticket = input("the ticket you would like to trade > ").upper()
     timeframe = "minute"
 
