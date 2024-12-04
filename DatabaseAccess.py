@@ -1,11 +1,22 @@
-import sqlite3 as SQL
+import pyodbc as SQL
 
-DB = SQL.connect("E:\\GitHub\\NEA\\Database\\Main.accdb")
-cur = DB.cursor()
-cur.execute("SELECT * From Table1")
-rows = cur.fetchall()
-DB.close()
-for row in rows:
-   print(row)
+def start():
+    SQL.lowercase = False
+    DB = SQL.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=E:\GitHub\NEA\Database\Main.accdb;')
+    cur = DB.cursor()
+    return cur, DB
 
-DB.close()
+def insert(val, table):
+    cur, DB = start()
+    cur.execute(f"INSERT {val} INTO {table}")
+    DB.close()
+
+def select(field, table):
+    cur, DB = start()
+    return cur.execute(f"SELECT {field} FROM {table}")
+    DB.close()
+
+def delete(condition, table):
+    cur, DB = start()
+    cur.execute(f"DELETE FROM {table} WHERE {condition}")
+    DB.close()
