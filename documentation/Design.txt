@@ -11,5 +11,8 @@ Design
     -Give an option to watch the program in action on a graph
     -Give the percent success based on the previous runs
     -When running the version that they can see, add relevant graphs e.g. RSI compared with another graph
+    -Account system
+    -61% americans try trading 70% fail so there needs to be a gateway
+    -Return a program they can use in tradingview
 
     -Give practice questions on fluctuations to get an estimate of the persons accuracy
