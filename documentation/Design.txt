@@ -1,15 +1,100 @@
 Analysis
     -Can all be done in python
-    -Using AI which already exists
-    -All legal
-    -It has a variable timeframe but all within 2 years
+    -Using data which already exists
+    -All legal*
+    -I have done some testing and it looks like i can get this finished by the summer if all goes well
 
 Design
-    -Make an AI that can take verbal statergies and implement them in my code
-    -Give the user a success rate based on past apperances in the data from Polygon API
-    -Return the code that they can use themselves in another software (use pine script for tradingview as it is the biggest platform) based on the success rates
-    -Give an option to watch the program in action on a graph
-    -Give the percent success based on the previous runs
-    -When running the version that they can see, add relevant graphs e.g. RSI compared with another graph
+    -Make python interface to present the algorithms
+    -Host a database using github pages to backtest strategies using SQL
+    -Have a "playground" so that people can practice and have an account system (hashing)
+    -Make an (AI) or (algorithm) that is very successfull
+    -(Take a users algorithm using an interprative AI) or (make an interface for creating an algorihm in code)
+    -Show the users or our algorithm in action
 
-    -Give practice questions on fluctuations to get an estimate of the persons accuracy
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+* WE ARE NOT LIABLE FOR ANY LOSSES TO MONEY HEALTH LIFESTYLE WE ARE SEPERATE FROM YOU, BETTER THAN YOU.
