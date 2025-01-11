@@ -59,7 +59,7 @@ for a in client.list_aggs(
     ticket,
     1,
     timeframe,
-    start1,
+    "1708527420000",
     end,
     limit=5000,
 ):
