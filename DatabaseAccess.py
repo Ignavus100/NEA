@@ -51,7 +51,7 @@ def Create(name, values):
 start1 = "2024-01-01"
 end = "2024-07-01"
 #AAPL MSFT GOOGL AMZN FB TSLA NVDA INTC ADBE NFLX PYPL (tickers that i am using for the project)
-ticket = "AAPL"
+ticket = "MSFT"
 timeframe = "minute"
 
 #OC-request from API
@@ -59,8 +59,8 @@ for a in client.list_aggs(
     ticket,
     1,
     timeframe,
-    "1708527420000",
-    end,
+    start1,
+    "1709151660000",
     limit=5000,
 ):
     #OC-insert the table values into the database or if needed create the database
