@@ -11,6 +11,7 @@ class Layer_Dense:
     def forward(self, inputs):
         self.output = np.dot(inputs, self.weights) + self.biases
 
+
 class Activation_ReLU:
     def forward(self, inputs):
         self.output = np.maximum(0, inputs)
@@ -21,6 +22,39 @@ class Activation_Softmax:
         exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
         probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
         self.output = probabilities
+
+
+class cost:
+    def calculate(self, output, y):
+        cost = self.forward(output, y)
+        #data_loss = np.mean(sample_losses)
+        return cost
+
+
+class cost_calculation(cost):
+    def forward(self, y_pred, y_true):
+        samples = len(y_pred)
+        cost = 0
+        y_resolved = []
+        for i in y_true:
+            temp = []
+            for j in range(len(y_pred[0])):
+                temp.append(0)
+            temp[i] = 1
+            y_resolved.append(temp)
+        for i in range(samples):
+            for j in range(len(y_pred[0])):
+                cost += (y_pred[i][j] - y_resolved[i][j])**2
+        #y_pred_clipped = np.clip(y_pred, 1e-7, 1-1e-7)
+        #if len(y_true.shape) == 1:
+            #correct_confidences = y_pred_clipped[range(samples), y_true]
+        #elif len(y_true.shape) == 2:
+            #correct_confidences = np.sum(y_pred_clipped * y_true, axiz=1)
+
+        #negative_log_likelihoods = -np.log(correct_confidences)
+        return cost
+
+
 
 X, y =  spiral_data(samples=100, classes=3)
 
@@ -37,3 +71,8 @@ dense2.forward(activation1.output)
 activation2.forward(dense2.output)
 
 print(activation2.output[:5])
+print(y)
+
+cost_function = cost_calculation()
+cost = cost_function.calculate(activation2.output, y)
+print(cost)
