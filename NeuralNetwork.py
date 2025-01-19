@@ -165,3 +165,4 @@ print(cost.calculate(n.forward(), y))
 #TODO: I have to make it so that a batch can be used by doing a for loop of the forward passes this means that new code is unchanged but the cost will have to be modified check normalize data function but it can just be run in a for loop
 #TODO: Then implement the neccecary functions for a backpropogation algorithm and bofore make sure that batch processing works
 #TODO: make the metworks a list and iterate for the backpassing and use the average cost of all the forwards passing or whatever algorithm that research tells you to do
+#TODO: make sure that there is only one change to the biases and weights for one batch
