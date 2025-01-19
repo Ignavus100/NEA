@@ -104,15 +104,13 @@ class cost_calculation(cost):
         samples = len(y_pred)
         cost = 0
         y_resolved = []
-        for i in y_true:
-            temp = []
-            for j in range(len(y_pred[0])):
-                temp.append(0)
-            temp[i] = 1
-            y_resolved.append(temp)
+        temp = []
+        for j in range(len(y_pred)):
+            temp.append(0)
+        temp[y_true[0]] = 1
+        y_resolved.append(temp)
         for i in range(samples):
-            for j in range(len(y_pred[0])):
-                cost += (y_pred[i][j] - y_resolved[i][j])**2
+            cost += (y_pred[i] - y_resolved[0][i])**2
         return cost
 
 
@@ -160,48 +158,10 @@ flattened_X = normalizeData(flattened_X[0])
 
 
 n = Network(2, len(flattened_X), 2, flattened_X)
-print(n.forward())
 
+cost = cost_calculation()
+print(cost.calculate(n.forward(), y))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-'''
-nnfs.init()
-
-class Layer_Dense:
-    def __init__(self, n_inputs, n_neurons):
-        self.weights = 0.10 * np.random.randn(n_inputs, n_neurons)
-        self.biases = np.zeros((1, n_neurons))
-    def forward(self, inputs):
-        inputs = np.array(inputs, dtype=np.float32)
-        self.output = np.dot(inputs, self.weights) + self.biases
-'''
+#TODO: I have to make it so that a batch can be used by doing a for loop of the forward passes this means that new code is unchanged but the cost will have to be modified check normalize data function but it can just be run in a for loop
+#TODO: Then implement the neccecary functions for a backpropogation algorithm and bofore make sure that batch processing works
+#TODO: make the metworks a list and iterate for the backpassing and use the average cost of all the forwards passing or whatever algorithm that research tells you to do
