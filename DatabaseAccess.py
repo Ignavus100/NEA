@@ -19,10 +19,10 @@ def insert(val, table):
     cur.close()
     DB.close()
 
-def select(field, table):
+def select(field, table, condition):
     cur, DB = start()
     #OC-stores in variable as it has to be returned
-    temp = cur.execute(f"SELECT {field} FROM {table};")
+    temp = cur.execute(f"SELECT {field} FROM {table} WHERE {condition};")
     temp = cur.fetchall()
     cur.close()
     DB.close()
@@ -55,7 +55,7 @@ ticket = "MSFT"
 timeframe = "minute"
 
 #OC-request from API
-for a in client.list_aggs(
+""" for a in client.list_aggs(
     ticket,
     1,
     timeframe,
@@ -70,3 +70,4 @@ for a in client.list_aggs(
         Create(ticket, "ID AUTOINCREMENT PRIMARY KEY, c DOUBLE, h DOUBLE, l DOUBLE, o DOUBLE, t DOUBLE, v DOUBLE")
         insert(a, ticket)
 
+ """
