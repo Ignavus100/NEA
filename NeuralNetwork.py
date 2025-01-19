@@ -12,8 +12,12 @@ class Activation_ReLU:
 
 class Activation_Softmax:
     def forward(self, inputs):
-        exp_values = np.exp(inputs - np.max(inputs, keepdims=True))
-        probabilities = exp_values / np.sum(exp_values, keepdims=True)
+        val = np.min(inputs)
+        if val < 0:
+            for i in range(len(inputs)):
+                inputs[i] = inputs[i] - val
+        
+        probabilities = normalizeData(inputs)
         self.output = probabilities
 
 
@@ -113,13 +117,21 @@ class cost_calculation(cost):
 
 
 def normalizeData(data):
+    '''
     data = np.array(data)
     min_val, max_val = np.min(data), np.max(data)
     range_min, range_max = (0, 1)
 
     normalized_data = (data - min_val) / (max_val - min_val)
     normalized_data = normalized_data * (range_max - range_min) + range_min
-    
+    '''
+    normalized_data = []
+    print(data)
+    sigma = 0
+    for i in data:
+        sigma += i
+    for i in data:
+        normalized_data.append(i/sigma)
     return normalized_data
 
 def backwards(cost):
@@ -144,10 +156,10 @@ for i in flattened_X:
         val = 1
     y.append(val)
 
-flattened_X = normalizeData(flattened_X)
+flattened_X = normalizeData(flattened_X[0])
 
 
-n = Network(2, len(flattened_X[0]), 2, flattened_X[0])
+n = Network(2, len(flattened_X), 2, flattened_X)
 print(n.forward())
 
 
