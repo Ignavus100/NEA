@@ -1,7 +1,5 @@
 import numpy as np
-import nnfs
 import random
-from nnfs.datasets import spiral_data
 from DatabaseAccess import select
 
 
