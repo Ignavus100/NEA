@@ -33,11 +33,13 @@ class Node:
 
 
     def forward(self, prevLayer: list):
+        self.prevLayer = prevLayer
         temp = 0
         activation = Activation_ReLU()
-        for i in range(len(prevLayer)):
-            if self.weights != None:
-                activation.forward((self.bias + (self.weights[i] * float(prevLayer[i].val))))
+        for i in range(len(self.prevLayer)):
+            if self.weights != None and self.prevLayer[i].val != None and self.bias != None:
+                #print(self.weights[i], self.bias, self.prevLayer[i].val)
+                activation.forward((self.bias + (float(self.weights[i]) * float(self.prevLayer[i].val))))
             else:
                 temp = 0
             temp += activation.output
@@ -72,6 +74,9 @@ class Network:
             temp.append(Node(16, None))
         self.layers.append(temp)
 
+    def newInput(self, values):
+        for i in range(self.inp_size):
+            self.layers[0][i] = (Node(None, values[i]))
 
     def forward(self):
         for i in range(1, len(self.layers)):
@@ -81,11 +86,58 @@ class Network:
         temp = []
         for i in range(len(self.layers[-1])):
             temp.append(self.layers[-1][i].val)
-        print(temp)
         
         activation = Activation_Softmax()
         activation.forward(temp)
         return activation.output
+    
+    def backwards(self):
+        #weights new calculation
+        #TODO: make it so that you can get the new biases by doing newtons method (on paper) and using charin rule for the derrivitave of the cost with respect to the weight
+        cost = cost_calculation()
+        for i in range((len(self.layers) - 2), 0, -1):
+            for j in self.layers[i]:
+                for k in range(len(j.weights)):
+                    if i == len(self.layers):
+                        z = j.bias + (float(j.weights[k]) * float(j.prevLayer[i].val))
+                        if z < 0:
+                            mz = 0
+                        else:
+                            mz = 1
+                            if (float(j.prevLayer[i].val) * mz * (2*(j.val - y[k]))) != 0:
+                                j.weights[k] -= ((cost.calculate(n.forward(), y))/(float(j.prevLayer[i].val) * mz * (2*(j.val - y[k]))))
+
+                    else:
+                        z = j.bias + (j.weights[k] * float(j.prevLayer[i].val))
+                        if z < 0:
+                            mz = 0
+                        else:
+                            mz = 1
+                            if (j.weights[k] * mz * (2*(j.val))) != 0:
+                                j.weights[k] -= ((cost.calculate(n.forward(), y))/(j.weights[k] * mz * (2*(j.val))))
+
+
+        #TODO: do the same but instead of weights, biases
+        for i in range(len(self.layers) - 2, 0, -1):
+            for j in self.layers[i]:
+                for k in range(len(j.weights)):
+                    if i == len(self.layers):
+                        z = j.bias + (j.weights[k] * float(j.prevLayer[i].val))
+                        if z < 0:
+                            mz = 0
+                        else:
+                            mz = 1
+                            if (mz * (2*(j.val - y[k]))) != 0:
+                                j.weights[k] -= ((cost.calculate(n.forward(), y))/(mz * (2*(j.val - y[k]))))
+
+                    else:
+                        z = j.bias + (j.weights[k] * float(j.prevLayer[i].val))
+                        if z < 0:
+                            mz = 0
+                        else:
+                            mz = 1
+                            if (mz * (2*(j.val))) !=  0:
+                                j.bias -= ((cost.calculate(n.forward(), y))/(mz * (2*(j.val))))
 
 
 
@@ -94,7 +146,6 @@ class cost:
         cost = self.forward(output, y)
         #data_loss = np.mean(sample_losses)
         return cost
-
 
 
 class cost_calculation(cost):
@@ -113,16 +164,7 @@ class cost_calculation(cost):
 
 
 def normalizeData(data):
-    '''
-    data = np.array(data)
-    min_val, max_val = np.min(data), np.max(data)
-    range_min, range_max = (0, 1)
-
-    normalized_data = (data - min_val) / (max_val - min_val)
-    normalized_data = normalized_data * (range_max - range_min) + range_min
-    '''
     normalized_data = []
-    print(data)
     sigma = 0
     for i in data:
         sigma += i
@@ -130,26 +172,24 @@ def normalizeData(data):
         normalized_data.append(i/sigma)
     return normalized_data
 
-def backwards(cost):
-    pass
-#X, y =  spiral_data(samples=100, classes=3)
-flattened_X = []
+
 batch_length = int(input("batch length: "))
+flattened_X = []
 for j in range(batch_length):
     X = []
     rnum = random.randint(1, 30125)
     for i in range(10):
-        X.append(select("*", "AAPL", f"ID = {rnum + i}"))
-    flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened is one dimensional
+        X.append(select("*", "AAPL", f"ID = {i}"))
+    flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
 
 y = []#expected outcomes
 for i in flattened_X:
-    if select("o", "AAPL", f"ID = {int(i[0]) + 15}")[0][0] > float(i[4]):
+    if select("o", "AAPL", f"ID = {int(i[0]) + 15}")[0][0] > float(i[4]) + (2 * abs((select("o", "AAPL", f"ID = {int(i[0])}")[0][0]) - (select("o", "AAPL", f"ID = {int(i[0]) + 1}")[0][0]))):
         val = 1
-    elif select("o", "AAPL", f"ID = {int(i[0]) + 15}")[0][0] < float(i[4]):
+    elif select("o", "AAPL", f"ID = {int(i[0]) + 15}")[0][0] < float(i[4]) + (2 * abs((select("o", "AAPL", f"ID = {int(i[0])}")[0][0]) - (select("o", "AAPL", f"ID = {int(i[0]) + 1}")[0][0]))):
         val = 0
     else:
-        val = 1
+        val = y[-1]
     y.append(val)
 
 flattened_X = normalizeData(flattened_X[0])
@@ -157,10 +197,37 @@ flattened_X = normalizeData(flattened_X[0])
 
 n = Network(2, len(flattened_X), 2, flattened_X)
 
-cost = cost_calculation()
-print(cost.calculate(n.forward(), y))
+def testing():
+    for i in range(1000):
+        flattened_X = []
+        for j in range(batch_length):
+            X = []
+            for k in range(15):
+                X.append(select("*", "AAPL", f"ID = {15*(i+1) + k}"))
+            #flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
+        #print(X)
+        y = []#expected outcomes
+        for j in X:
+            #print(j)
+            if select("o", "AAPL", f"ID = {int(j[0][0]) + 15}")[0][0] > float(j[0][4]) + (2 * abs((select("o", "AAPL", f"ID = {int(j[0][0])}")[0][0]) - (select("o", "AAPL", f"ID = {int(j[0][0]) + 1}")[0][0]))):
+                val = 1
+            elif select("o", "AAPL", f"ID = {int(j[0][0]) + 15}")[0][0] < float(j[0][4]) + (2 * abs((select("o", "AAPL", f"ID = {int(j[0][0])}")[0][0]) - (select("o", "AAPL", f"ID = {int(j[0][0]) + 1}")[0][0]))):
+                val = 0
+            else:
+                try:
+                    val = y[-1]
+                except:
+                    val = 0
+            y.append(val)
+        print(y)
 
-#TODO: I have to make it so that a batch can be used by doing a for loop of the forward passes this means that new code is unchanged but the cost will have to be modified check normalize data function but it can just be run in a for loop
-#TODO: Then implement the neccecary functions for a backpropogation algorithm and bofore make sure that batch processing works
-#TODO: make the metworks a list and iterate for the backpassing and use the average cost of all the forwards passing or whatever algorithm that research tells you to do
-#TODO: make sure that there is only one change to the biases and weights for one batch
+        flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
+        flattened_X = normalizeData(flattened_X[0])
+        n.newInput(flattened_X)
+
+        cost = cost_calculation()
+        print(cost.calculate(n.forward(), y))
+        n.backwards()
+
+
+testing()
