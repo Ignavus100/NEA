@@ -1,7 +1,7 @@
 import numpy as np
 import random
 from DatabaseAccess import select
-
+import pickle
 
 class Activation_ReLU:
     def forward(self, inputs):
@@ -194,40 +194,50 @@ for i in flattened_X:
 
 flattened_X = normalizeData(flattened_X[0])
 
+def save_model(network, filename="model.pkl"):
+    with open(filename, "wb") as f:
+        pickle.dump(network, f)
 
-n = Network(2, len(flattened_X), 2, flattened_X)
+def load_model(filename="model.pkl"):
+    with open(filename, "rb") as f:
+        return pickle.load(f)
 
-def testing():
-    for i in range(1000):
-        flattened_X = []
-        for j in range(batch_length):
-            X = []
-            for k in range(15):
-                X.append(select("*", "AAPL", f"ID = {15*(i+1) + k}"))
-            #flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
-        #print(X)
-        y = []#expected outcomes
-        for j in X:
-            #print(j)
-            if select("o", "AAPL", f"ID = {int(j[0][0]) + 15}")[0][0] > float(j[0][4]) + (2 * abs((select("o", "AAPL", f"ID = {int(j[0][0])}")[0][0]) - (select("o", "AAPL", f"ID = {int(j[0][0]) + 1}")[0][0]))):
-                val = 1
-            elif select("o", "AAPL", f"ID = {int(j[0][0]) + 15}")[0][0] < float(j[0][4]) + (2 * abs((select("o", "AAPL", f"ID = {int(j[0][0])}")[0][0]) - (select("o", "AAPL", f"ID = {int(j[0][0]) + 1}")[0][0]))):
-                val = 0
-            else:
-                try:
-                    val = y[-1]
-                except:
+n = load_model()
+
+def testing(epochs):
+    for epoch in range(epochs):
+        for i in range(2000):
+            flattened_X = []
+            for j in range(batch_length):
+                X = []
+                for k in range(15):
+                    X.append(select("*", "AAPL", f"ID = {15*(i+1) + k}"))
+                #flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
+            #print(X)
+            y = []#expected outcomes
+            for j in X:
+                #print(j)
+                if select("o", "AAPL", f"ID = {int(j[0][0]) + 15}")[0][0] > float(j[0][4]) + (2 * abs((select("o", "AAPL", f"ID = {int(j[0][0])}")[0][0]) - (select("o", "AAPL", f"ID = {int(j[0][0]) + 1}")[0][0]))):
+                    val = 1
+                elif select("o", "AAPL", f"ID = {int(j[0][0]) + 15}")[0][0] < float(j[0][4]) + (2 * abs((select("o", "AAPL", f"ID = {int(j[0][0])}")[0][0]) - (select("o", "AAPL", f"ID = {int(j[0][0]) + 1}")[0][0]))):
                     val = 0
-            y.append(val)
-        print(y)
+                else:
+                    try:
+                        val = y[-1]
+                    except:
+                        val = 0
+                y.append(val)
+            print(y)
 
-        flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
-        flattened_X = normalizeData(flattened_X[0])
-        n.newInput(flattened_X)
+            flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
+            flattened_X = normalizeData(flattened_X[0])
+            n.newInput(flattened_X)
 
-        cost = cost_calculation()
-        print(cost.calculate(n.forward(), y))
-        n.backwards()
+            cost = cost_calculation()
+            print(cost.calculate(n.forward(), y))
+            n.backwards()
 
+            save_model(n)
 
-testing()
+epochs = int(input("epochs: "))
+testing(epochs)
