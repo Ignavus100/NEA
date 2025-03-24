@@ -177,19 +177,39 @@ batch_length = int(input("batch length: "))
 flattened_X = []
 for j in range(batch_length):
     X = []
-    rnum = random.randint(1, 30125)
-    for i in range(10):
-        X.append(select("*", "AAPL", f"ID = {i}"))
+    for i in range(15):
+        X.append(select("c, h, l, o, v", "AAPL", f"ID = {15 * j + i}"))
     flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
 
 y = []#expected outcomes
-for i in flattened_X:
-    if select("o", "AAPL", f"ID = {int(i[0]) + 15}")[0][0] > float(i[4]) + (2 * abs((select("o", "AAPL", f"ID = {int(i[0])}")[0][0]) - (select("o", "AAPL", f"ID = {int(i[0]) + 1}")[0][0]))):
+highNext15 = []
+for j in range(batch_length):
+    for i in range(15):
+        try:
+            if highNext15[j] < select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0]:
+                highNext15[j] = select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0]
+        except:
+            highNext15.append(select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0])
+
+high15 = []
+for j in range(batch_length):
+    for i in range(15):
+        try:
+            if high15[j] < select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0]:
+                high15[j] = select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0]
+        except:
+            high15.append(select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0])
+
+for i in range(batch_length):
+    if highNext15[i] > high15[i]:
         val = 1
-    elif select("o", "AAPL", f"ID = {int(i[0]) + 15}")[0][0] < float(i[4]) + (2 * abs((select("o", "AAPL", f"ID = {int(i[0])}")[0][0]) - (select("o", "AAPL", f"ID = {int(i[0]) + 1}")[0][0]))):
+    elif highNext15[i] < high15[i]:
         val = 0
     else:
-        val = y[-1]
+        try:
+            val = y[i][-1]
+        except:
+            val = 0
     y.append(val)
 
 flattened_X = normalizeData(flattened_X[0])
@@ -211,30 +231,50 @@ def testing(epochs):
             for j in range(batch_length):
                 X = []
                 for k in range(15):
-                    X.append(select("*", "AAPL", f"ID = {15*(i+1) + k}"))
+                    X.append(select("c, h, l, o, v", "AAPL", f"ID = {15*(i+1) + k}"))
                 #flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
             #print(X)
+            flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
             y = []#expected outcomes
-            for j in X:
-                #print(j)
-                if select("o", "AAPL", f"ID = {int(j[0][0]) + 15}")[0][0] > float(j[0][4]) + (2 * abs((select("o", "AAPL", f"ID = {int(j[0][0])}")[0][0]) - (select("o", "AAPL", f"ID = {int(j[0][0]) + 1}")[0][0]))):
+            highNext15 = []
+            for j in range(batch_length):
+                for i in range(15):
+                    try:
+                        if highNext15[j] < select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0]:
+                            highNext15[j] = select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0]
+                    except:
+                        highNext15.append(select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0])
+
+            high15 = []
+            for j in range(batch_length):
+                for i in range(15):
+                    try:
+                        if high15[j] < select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0]:
+                            high15[j] = select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0]
+                    except:
+                        high15.append(select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0])
+
+            for i in range(batch_length):
+                if highNext15[i] > high15[i]:
                     val = 1
-                elif select("o", "AAPL", f"ID = {int(j[0][0]) + 15}")[0][0] < float(j[0][4]) + (2 * abs((select("o", "AAPL", f"ID = {int(j[0][0])}")[0][0]) - (select("o", "AAPL", f"ID = {int(j[0][0]) + 1}")[0][0]))):
+                elif highNext15[i] < high15[i]:
                     val = 0
                 else:
-                    try:
-                        val = y[-1]
-                    except:
-                        val = 0
+                    #try:
+                    val = y[i][-1]
+                    #except:
+                        #val = 0
                 y.append(val)
-            print(y)
 
-            flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
+            
             flattened_X = normalizeData(flattened_X[0])
             n.newInput(flattened_X)
 
             cost = cost_calculation()
-            print(cost.calculate(n.forward(), y))
+            print(y)
+            temp = n.forward()
+            print(temp)
+            print(cost.calculate(temp, y))
             n.backwards()
 
             save_model(n)
