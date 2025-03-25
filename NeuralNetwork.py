@@ -92,53 +92,28 @@ class Network:
         return activation.output
     
     def backwards(self):
-        #weights new calculation
-        #TODO: make it so that you can get the new biases by doing newtons method (on paper) and using charin rule for the derrivitave of the cost with respect to the weight
         cost = cost_calculation()
-        for i in range((len(self.layers) - 2), 0, -1):
+        loss = cost.calculate(self.forward(), y)
+        
+        for i in range(len(self.layers) - 1, 0, -1):
             for j in self.layers[i]:
                 for k in range(len(j.weights)):
-                    if i == len(self.layers):
-                        z = j.bias + (float(j.weights[k]) * float(j.prevLayer[i].val))
-                        if z < 0:
-                            mz = 0
-                        else:
-                            mz = 1
-                            if (float(j.prevLayer[i].val) * mz * (2*(j.val - y[k]))) != 0:
-                                j.weights[k] -= ((cost.calculate(n.forward(), y))/(float(j.prevLayer[i].val) * mz * (2*(j.val - y[k]))))
-
-                    else:
-                        z = j.bias + (j.weights[k] * float(j.prevLayer[i].val))
-                        if z < 0:
-                            mz = 0
-                        else:
-                            mz = 1
-                            if (j.weights[k] * mz * (2*(j.val))) != 0:
-                                j.weights[k] -= ((cost.calculate(n.forward(), y))/(j.weights[k] * mz * (2*(j.val))))
-
-
-        #TODO: do the same but instead of weights, biases
-        for i in range(len(self.layers) - 2, 0, -1):
-            for j in self.layers[i]:
-                for k in range(len(j.weights)):
-                    if i == len(self.layers):
-                        z = j.bias + (j.weights[k] * float(j.prevLayer[i].val))
-                        if z < 0:
-                            mz = 0
-                        else:
-                            mz = 1
-                            if (mz * (2*(j.val - y[k]))) != 0:
-                                j.weights[k] -= ((cost.calculate(n.forward(), y))/(mz * (2*(j.val - y[k]))))
-
-                    else:
-                        z = j.bias + (j.weights[k] * float(j.prevLayer[i].val))
-                        if z < 0:
-                            mz = 0
-                        else:
-                            mz = 1
-                            if (mz * (2*(j.val))) !=  0:
-                                j.bias -= ((cost.calculate(n.forward(), y))/(mz * (2*(j.val))))
-
+                    prev_val = float(j.prevLayer[k].val) if j.prevLayer is not None else 0
+                    
+                    z = j.bias + (j.weights[k] * prev_val)
+                    mz = 1 if z > 0 else 0  # Derivative of ReLU
+                    
+                    y_target = y[k] if k < len(y) else 0  # Ensure valid indexing
+                    
+                    gradient_w = 2 * (j.val - y_target) * mz * prev_val if i == len(self.layers) - 1 else 2 * j.val * mz * prev_val
+                    gradient_b = 2 * (j.val - y_target) * mz if i == len(self.layers) - 1 else 2 * j.val * mz
+                    
+                    if gradient_w != 0:
+                        j.weights[k] -= loss / gradient_w
+                    
+                # Update biases
+                if gradient_b != 0:
+                    j.bias -= loss / gradient_b
 
 
 class cost:
