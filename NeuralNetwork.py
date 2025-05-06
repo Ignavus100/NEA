@@ -22,7 +22,8 @@ class Activation_Softmax:
 class Node:
     def __init__(self, prevNeuronsAmount: int, val):
         self.val = val
-        self.bias = 0.1 * random.randint(-50, 50)
+        self.bias = np.random.randn() * 0.1
+        self.weights = np.random.randn(prevNeuronsAmount) * np.sqrt(2/prevNeuronsAmount) if prevNeuronsAmount else None
         self.prevNeuronsAmount = prevNeuronsAmount
         self.weights = []
         if prevNeuronsAmount != None:
@@ -125,6 +126,21 @@ class cost:
 
 class cost_calculation(cost):
     def forward(self, y_pred, y_true):
+        # Convert y_true to numpy array first
+        y_true = np.array(y_true)
+        y_pred = np.clip(y_pred, 1e-7, 1-1e-7)
+        if len(y_true.shape) == 1:
+            y_true = np.eye(2)[y_true.astype(int)]
+        return -np.mean(y_true * np.log(y_pred))
+
+    def backwards(self, y):  # Add y parameter here
+        learning_rate = 0.001
+        momentum = 0.9
+        # Store pre-activation values during forward pass
+        self.z_values = [layer.z for layer in self.layers]
+        
+        # Calculate output layer gradients
+        output_errors = (self.layers[-1].output - y) / len(y)
         samples = len(y_pred)
         cost = 0
         y_resolved = []
@@ -139,13 +155,12 @@ class cost_calculation(cost):
 
 
 def normalizeData(data):
-    normalized_data = []
-    sigma = 0
-    for i in data:
-        sigma += i
-    for i in data:
-        normalized_data.append(i/sigma)
-    return normalized_data
+    data = np.array(data, dtype=np.float32)
+    if data.size == 0:
+        return np.zeros_like(data)
+    data_min = data.min(axis=0)
+    data_max = data.max(axis=0)
+    return (data - data_min) / (data_max - data_min + 1e-8)
 
 
 batch_length = int(input("batch length: "))
@@ -157,35 +172,31 @@ for j in range(batch_length):
     flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
 
 y = []#expected outcomes
+# Fix highNext15 calculation
 highNext15 = []
 for j in range(batch_length):
+    current_high = -float('inf')
     for i in range(15):
-        try:
-            if highNext15[j] < select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0]:
-                highNext15[j] = select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0]
-        except:
-            highNext15.append(select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0])
+        result = select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0]
+        current_high = max(current_high, result)
+    highNext15.append(current_high)
 
+# Fix high15 calculation
 high15 = []
 for j in range(batch_length):
+    current_high = -float('inf')
     for i in range(15):
-        try:
-            if high15[j] < select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0]:
-                high15[j] = select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0]
-        except:
-            high15.append(select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0])
+        result = select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0]
+        current_high = max(current_high, result)
+    high15.append(current_high)
 
-for i in range(batch_length):
-    if highNext15[i] > high15[i]:
-        val = 1
-    elif highNext15[i] < high15[i]:
-        val = 0
+# Fix target calculation
+y = []
+for j in range(batch_length):
+    if highNext15[j] > high15[j]:
+        y.append(1)
     else:
-        try:
-            val = y[i][-1]
-        except:
-            val = 0
-    y.append(val)
+        y.append(0)
 
 flattened_X = normalizeData(flattened_X[0])
 
@@ -199,9 +210,53 @@ def load_model(filename="model.pkl"):
 
 n = load_model()
 
+def validate():
+    # Load validation data with proper error handling
+    val_flattened_X = []
+    try:
+        for j in range(batch_length):
+            X = []
+            rnum = random.randint(30000, 40000)  # Adjusted ID range
+            for i in range(15):  # Match training's 15-period window
+                # Use same columns as training data
+                result = select("c, h, l, o, v", "AAPL", f"ID = {rnum + i}")  
+                if result:
+                    X.append(result)
+            
+            # Only add non-empty sequences
+            if X:  
+                flattened = [value for sublist in X for inner_list in sublist for value in inner_list]
+                val_flattened_X.append(flattened)
+        
+        # Check for empty validation data
+        if not val_flattened_X:
+            return float('inf'), 0.0
+            
+        val_flattened_X_normalized = normalizeData(val_flattened_X[0])
+        n.newInput(val_flattened_X_normalized)
+        val_output = n.forward()
+        
+        # Calculate validation metrics
+        val_loss = cost_calculation().forward(val_output, y)
+        val_acc = np.mean(np.argmax(val_output) == np.array(y))
+        return val_loss, val_acc
+        
+    except Exception as e:
+        print(f"Validation error: {str(e)}")
+        return float('inf'), 0.0
+
 def testing(epochs):
+    num_batches = 2000  # Add this line to define num_batches
+    best_loss = float('inf')  # Initialize best_loss at the start
     for epoch in range(epochs):
-        for i in range(2000):
+        correct = 0  # Initialize correct at the start of each epoch
+        epoch_loss = 0  # Initialize epoch_loss at the start of each epoch
+        # Add validation call
+        val_loss, val_acc = validate()
+        print(f"Epoch {epoch+1}, Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
+        
+        # Fixed training loop using num_batches
+        for i in range(num_batches):  # Changed from 'for batch in batches'
             flattened_X = []
             for j in range(batch_length):
                 X = []
@@ -252,7 +307,18 @@ def testing(epochs):
             print(cost.calculate(temp, y))
             n.backwards()
 
-            save_model(n)
+            # Track accuracy - FIXED variable name and axis
+            predictions = np.argmax(temp)  # Remove axis=1 for 1D array
+            correct += np.sum(predictions == y)
+            
+            # Validation after each epoch
+            val_loss, val_acc = validate()
+            print(f"Epoch {epoch+1} - Loss: {epoch_loss:.4f} | Acc: {correct/len(y):.2%} | Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.2%}")
+            
+            # Save best model
+            if val_loss < best_loss:
+                save_model(n)
+                best_loss = val_loss
 
 epochs = int(input("epochs: "))
 testing(epochs)

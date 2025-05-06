@@ -1,4 +1,5 @@
 import polygon
+from DatabaseAccess import select
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 plt.style.use("dark_background")
@@ -66,7 +67,7 @@ class UpdateData():
 
 
 def GraphData():
-
+    '''
     #OC-Get user input for bars
     aggs = []
     start = "2024-11-29"
@@ -84,7 +85,8 @@ def GraphData():
         limit=5000,
     ):
         aggs.append(a)
-
+'''
+    aggs = select("*", "AAPL", "t > 1")
     #OC-animation function that takes counter i and plots the data given from the API as a box plot
     def animate(i, data):
         #fig, (ax1, ax2) = plt.subplots(2)
