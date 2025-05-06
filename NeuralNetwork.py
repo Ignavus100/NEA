@@ -203,114 +203,37 @@ flattened_X = normalizeData(flattened_X[0])
 
 n = Network(2, len(flattened_X), 2, flattened_X)
 
-def validate():
-    # Load validation data with proper error handling
-    val_flattened_X = []
-    try:
+def testing():
+    for i in range(1000):
+        flattened_X = []
         for j in range(batch_length):
             X = []
-            rnum = random.randint(30000, 40000)  # Adjusted ID range
-            for i in range(15):  # Match training's 15-period window
-                # Use same columns as training data
-                result = select("c, h, l, o, v", "AAPL", f"ID = {rnum + i}")  
-                if result:
-                    X.append(result)
-            
-            # Only add non-empty sequences
-            if X:  
-                flattened = [value for sublist in X for inner_list in sublist for value in inner_list]
-                val_flattened_X.append(flattened)
-        
-        # Check for empty validation data
-        if not val_flattened_X:
-            return float('inf'), 0.0
-            
-        val_flattened_X_normalized = normalizeData(val_flattened_X[0])
-        n.newInput(val_flattened_X_normalized)
-        val_output = n.forward()
-        
-        # Calculate validation metrics
-        val_loss = cost_calculation().forward(val_output, y)
-        val_acc = np.mean(np.argmax(val_output) == np.array(y))
-        return val_loss, val_acc
-        
-    except Exception as e:
-        print(f"Validation error: {str(e)}")
-        return float('inf'), 0.0
-
-def testing(epochs):
-    num_batches = 2000  # Add this line to define num_batches
-    best_loss = float('inf')  # Initialize best_loss at the start
-    for epoch in range(epochs):
-        correct = 0  # Initialize correct at the start of each epoch
-        epoch_loss = 0  # Initialize epoch_loss at the start of each epoch
-        # Add validation call
-        val_loss, val_acc = validate()
-        print(f"Epoch {epoch+1}, Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
-        
-        # Fixed training loop using num_batches
-        for i in range(num_batches):  # Changed from 'for batch in batches'
-            flattened_X = []
-            for j in range(batch_length):
-                X = []
-                for k in range(15):
-                    X.append(select("c, h, l, o, v", "AAPL", f"ID = {15*(i+1) + k}"))
-                #flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
-            #print(X)
-            flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
-            y = []#expected outcomes
-            highNext15 = []
-            for j in range(batch_length):
-                for i in range(15):
-                    try:
-                        if highNext15[j] < select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0]:
-                            highNext15[j] = select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0]
-                    except:
-                        highNext15.append(select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0])
-
-            high15 = []
-            for j in range(batch_length):
-                for i in range(15):
-                    try:
-                        if high15[j] < select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0]:
-                            high15[j] = select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0]
-                    except:
-                        high15.append(select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0])
-
-            for i in range(batch_length):
-                if highNext15[i] > high15[i]:
-                    val = 1
-                elif highNext15[i] < high15[i]:
+            for k in range(15):
+                X.append(select("*", "AAPL", f"ID = {15*(i+1) + k}"))
+            #flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
+        #print(X)
+        y = []#expected outcomes
+        for j in X:
+            #print(j)
+            if select("o", "AAPL", f"ID = {int(j[0][0]) + 15}")[0][0] > float(j[0][4]) + (2 * abs((select("o", "AAPL", f"ID = {int(j[0][0])}")[0][0]) - (select("o", "AAPL", f"ID = {int(j[0][0]) + 1}")[0][0]))):
+                val = 1
+            elif select("o", "AAPL", f"ID = {int(j[0][0]) + 15}")[0][0] < float(j[0][4]) + (2 * abs((select("o", "AAPL", f"ID = {int(j[0][0])}")[0][0]) - (select("o", "AAPL", f"ID = {int(j[0][0]) + 1}")[0][0]))):
+                val = 0
+            else:
+                try:
+                    val = y[-1]
+                except:
                     val = 0
-                else:
-                    #try:
-                    val = y[i][-1]
-                    #except:
-                        #val = 0
-                y.append(val)
+            y.append(val)
+        print(y)
 
-            
-            flattened_X = normalizeData(flattened_X[0])
-            n.newInput(flattened_X)
+        flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
+        flattened_X = normalizeData(flattened_X[0])
+        n.newInput(flattened_X)
 
-            cost = cost_calculation()
-            print(y)
-            temp = n.forward()
-            print(temp)
-            print(cost.calculate(temp, y))
-            n.backwards()
+        cost = cost_calculation()
+        print(cost.calculate(n.forward(), y))
+        n.backwards()
 
-            # Track accuracy - FIXED variable name and axis
-            predictions = np.argmax(temp)  # Remove axis=1 for 1D array
-            correct += np.sum(predictions == y)
-            
-            # Validation after each epoch
-            val_loss, val_acc = validate()
-            print(f"Epoch {epoch+1} - Loss: {epoch_loss:.4f} | Acc: {correct/len(y):.2%} | Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.2%}")
-            
-            # Save best model
-            if val_loss < best_loss:
-                save_model(n)
-                best_loss = val_loss
 
 testing()
