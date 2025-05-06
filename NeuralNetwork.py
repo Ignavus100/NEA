@@ -1,7 +1,7 @@
 import numpy as np
 import random
 from DatabaseAccess import select
-import pickle
+
 
 class Activation_ReLU:
     def forward(self, inputs):
@@ -200,15 +200,8 @@ for j in range(batch_length):
 
 flattened_X = normalizeData(flattened_X[0])
 
-def save_model(network, filename="model.pkl"):
-    with open(filename, "wb") as f:
-        pickle.dump(network, f)
 
-def load_model(filename="model.pkl"):
-    with open(filename, "rb") as f:
-        return pickle.load(f)
-
-n = load_model()
+n = Network(2, len(flattened_X), 2, flattened_X)
 
 def validate():
     # Load validation data with proper error handling
@@ -320,5 +313,4 @@ def testing(epochs):
                 save_model(n)
                 best_loss = val_loss
 
-epochs = int(input("epochs: "))
-testing(epochs)
+testing()
