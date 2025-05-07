@@ -1,7 +1,7 @@
 import numpy as np
 import random
 from DatabaseAccess import select
-
+import pickle
 
 class Activation_ReLU:
     def forward(self, inputs):
@@ -22,8 +22,7 @@ class Activation_Softmax:
 class Node:
     def __init__(self, prevNeuronsAmount: int, val):
         self.val = val
-        self.bias = np.random.randn() * 0.1
-        self.weights = np.random.randn(prevNeuronsAmount) * np.sqrt(2/prevNeuronsAmount) if prevNeuronsAmount else None
+        self.bias = 0.1 * random.randint(-50, 50)
         self.prevNeuronsAmount = prevNeuronsAmount
         self.weights = []
         if prevNeuronsAmount != None:
@@ -126,21 +125,6 @@ class cost:
 
 class cost_calculation(cost):
     def forward(self, y_pred, y_true):
-        # Convert y_true to numpy array first
-        y_true = np.array(y_true)
-        y_pred = np.clip(y_pred, 1e-7, 1-1e-7)
-        if len(y_true.shape) == 1:
-            y_true = np.eye(2)[y_true.astype(int)]
-        return -np.mean(y_true * np.log(y_pred))
-
-    def backwards(self, y):  # Add y parameter here
-        learning_rate = 0.001
-        momentum = 0.9
-        # Store pre-activation values during forward pass
-        self.z_values = [layer.z for layer in self.layers]
-        
-        # Calculate output layer gradients
-        output_errors = (self.layers[-1].output - y) / len(y)
         samples = len(y_pred)
         cost = 0
         y_resolved = []
@@ -155,12 +139,13 @@ class cost_calculation(cost):
 
 
 def normalizeData(data):
-    data = np.array(data, dtype=np.float32)
-    if data.size == 0:
-        return np.zeros_like(data)
-    data_min = data.min(axis=0)
-    data_max = data.max(axis=0)
-    return (data - data_min) / (data_max - data_min + 1e-8)
+    normalized_data = []
+    sigma = 0
+    for i in data:
+        sigma += i
+    for i in data:
+        normalized_data.append(i/sigma)
+    return normalized_data
 
 
 batch_length = int(input("batch length: "))
@@ -172,68 +157,102 @@ for j in range(batch_length):
     flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
 
 y = []#expected outcomes
-# Fix highNext15 calculation
 highNext15 = []
 for j in range(batch_length):
-    current_high = -float('inf')
     for i in range(15):
-        result = select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0]
-        current_high = max(current_high, result)
-    highNext15.append(current_high)
+        try:
+            if highNext15[j] < select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0]:
+                highNext15[j] = select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0]
+        except:
+            highNext15.append(select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0])
 
-# Fix high15 calculation
 high15 = []
 for j in range(batch_length):
-    current_high = -float('inf')
     for i in range(15):
-        result = select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0]
-        current_high = max(current_high, result)
-    high15.append(current_high)
+        try:
+            if high15[j] < select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0]:
+                high15[j] = select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0]
+        except:
+            high15.append(select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0])
 
-# Fix target calculation
-y = []
-for j in range(batch_length):
-    if highNext15[j] > high15[j]:
-        y.append(1)
+for i in range(batch_length):
+    if highNext15[i] > high15[i]:
+        val = 1
+    elif highNext15[i] < high15[i]:
+        val = 0
     else:
-        y.append(0)
+        try:
+            val = y[i][-1]
+        except:
+            val = 0
+    y.append(val)
 
 flattened_X = normalizeData(flattened_X[0])
 
+def save_model(network, filename="model.pkl"):
+    with open(filename, "wb") as f:
+        pickle.dump(network, f)
 
-n = Network(2, len(flattened_X), 2, flattened_X)
+def load_model(filename="model.pkl"):
+    with open(filename, "rb") as f:
+        return pickle.load(f)
 
-def testing():
-    for i in range(1000):
-        flattened_X = []
-        for j in range(batch_length):
-            X = []
-            for k in range(15):
-                X.append(select("*", "AAPL", f"ID = {15*(i+1) + k}"))
-            #flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
-        #print(X)
-        y = []#expected outcomes
-        for j in X:
-            #print(j)
-            if select("o", "AAPL", f"ID = {int(j[0][0]) + 15}")[0][0] > float(j[0][4]) + (2 * abs((select("o", "AAPL", f"ID = {int(j[0][0])}")[0][0]) - (select("o", "AAPL", f"ID = {int(j[0][0]) + 1}")[0][0]))):
-                val = 1
-            elif select("o", "AAPL", f"ID = {int(j[0][0]) + 15}")[0][0] < float(j[0][4]) + (2 * abs((select("o", "AAPL", f"ID = {int(j[0][0])}")[0][0]) - (select("o", "AAPL", f"ID = {int(j[0][0]) + 1}")[0][0]))):
-                val = 0
-            else:
-                try:
-                    val = y[-1]
-                except:
+n = load_model()
+
+def testing(epochs):
+    for epoch in range(epochs):
+        for i in range(2000):
+            flattened_X = []
+            for j in range(batch_length):
+                X = []
+                for k in range(15):
+                    X.append(select("c, h, l, o, v", "AAPL", f"ID = {15*(i+1) + k}"))
+                #flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
+            #print(X)
+            flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
+            y = []#expected outcomes
+            highNext15 = []
+            for j in range(batch_length):
+                for i in range(15):
+                    try:
+                        if highNext15[j] < select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0]:
+                            highNext15[j] = select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0]
+                    except:
+                        highNext15.append(select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + 15 + i}")[0][0])
+
+            high15 = []
+            for j in range(batch_length):
+                for i in range(15):
+                    try:
+                        if high15[j] < select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0]:
+                            high15[j] = select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0]
+                    except:
+                        high15.append(select("o", "AAPL", f"ID = {int(flattened_X[j][0]) + i}")[0][0])
+
+            for i in range(batch_length):
+                if highNext15[i] > high15[i]:
+                    val = 1
+                elif highNext15[i] < high15[i]:
                     val = 0
-            y.append(val)
-        print(y)
+                else:
+                    #try:
+                    val = y[i][-1]
+                    #except:
+                        #val = 0
+                y.append(val)
 
-        flattened_X.append([value for sublist in X for inner_list in sublist for value in inner_list])#flattened, is one dimensional
-        flattened_X = normalizeData(flattened_X[0])
-        n.newInput(flattened_X)
+            
+            flattened_X = normalizeData(flattened_X[0])
+            n.newInput(flattened_X)
 
-        cost = cost_calculation()
-        print(cost.calculate(n.forward(), y))
-        n.backwards()
+            cost = cost_calculation()
+            print(y)
+            temp = n.forward()
+            print(temp)
+            print(cost.calculate(temp, y))
+            n.backwards()
 
+            save_model(n)
 
-testing()
+epochs = int(input("epochs: "))
+testing(epochs)
