@@ -55,6 +55,7 @@ ticket = "MSFT"
 timeframe = "minute"
 
 #OC-request from API
+#OC-THE RUN ONCE CREATION OF THE DATABASE
 """ for a in client.list_aggs(
     ticket,
     1,
