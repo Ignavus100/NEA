@@ -1,0 +1,40 @@
+CLASS Network
+    ARR layers
+    PROCEDURE instantiate(self, inp_size, out_size, hidden_amount, hidden_size)
+        layers.APPEND(Layer(0, inp_size))
+        FOR i in hidden_amount
+            IF i = 0
+                THEN layers.APPEND(Layer(inp_size, hidden_size))
+            ELSE
+                layers.APPEND(Layer(hidden_size, hidden_size))
+        layers.APPEND(Layer(hidden_size, out_size))
+
+CLASS Layer
+    MATRIX weights
+    MATRIX bias
+    MATRIX prev_activation
+    MATRIX curr_activation
+    PROCEDURE instantiate(self, prev_neuron_amount, curr_neuron_amount)
+        weights = random numbers in dimensions curr_neuron_amount x prev_neuron_amount
+        prev_activation = fetch from prev neuron if this is not input layer
+        curr_activation = Null's in matrix dimensions curr_neuron_amount x 1
+        bias = Null's in matrix dimensions prev_neuron_amount x 1
+
+
+    PROCEDURE forward(self)
+        WHILE curr_activation[0] is Null
+            IF prev_activation[0] is not Null
+                THEN curr_activation <- RELU(weights * prev_activation + bias)
+            ELSE
+                IF prev_layer != input_layer
+                    THEN prev_layer.forward()
+                ELSE
+                    return 0
+                ENDIF     
+            ENDIF
+
+
+PROCEDURE RELU(arr)
+    FOR i -> len(arr):
+        IF arr[i] < 0
+            THEN arr[i] <- 0
