@@ -1,0 +1,18 @@
+PROCEDURE Start
+    instantiate a cursor in the main database
+
+PROCEDURE insert(val, table)
+    start()
+    run command(INSERT INTO {table}(c , h , l , o , t , v ) VALUES({val.close}, {val.high}, {val.low}, {val.open}, {val.timestamp}, {val.volume}))
+
+PROCEDURE select(field, table, condition)
+    start()
+    run command(SELECT {field} FROM {table} WHERE {condition})
+
+PROCEDURE delete(condition, table)
+    start()
+    run command(DELETE FROM {table} WHERE {condition})
+
+PROCEDURE create(name, values)
+    start()
+    run command(CREATE TABLE {name}({values}))
