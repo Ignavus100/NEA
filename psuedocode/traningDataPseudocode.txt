@@ -1,0 +1,119 @@
+IMPORT all FROM NeuralNetwork.py
+IMPORT all FROM DatabaseAccess.py
+
+PROCESS Indicators(ARR candles)
+    output <- []
+    PROCESS SMA(candles)
+        total <- 0
+        FOR i -> len(candles)
+            total <- total + candles[i].close
+        return (total/len(candles))
+    
+    PROCESS EMA(candles)
+        span <- 10
+        multiplyer <- 2/(span + 1)
+        FOR i -> len(candles)
+            closes.append(candles[i].close)
+        ema = [closes[0]]
+        FOR i -> len(candles) - 1
+            ema.append((closes[i] - ema[i-1]) * multiplyer + ema[i-1])
+        return (ema[-1])
+    
+    PROCESS RSI(candles)
+        Gain <- 0
+        Loss <- 0
+        g <- 0
+        l <- 0
+        FOR i ->len(candles) - 1
+            IF candles[i+1] > candles[i]
+                Gain <- Gain + candles[i+1] - candles[i]
+                g <- g + 1
+            ELSE
+                Loss <- Loss + candles[i] - candles[i+1]
+                l <- l + 1
+        avgGain <- Gain/g
+        avgLoss <- Loss/l
+        RS <- avgGain/avgLoss
+        RSI <- 100 - (100 / (1 + RS))
+        return (RSI)
+
+    PROCESS SO(candles)
+        HH <- Null
+        LL <- Null
+        FOR i -> len(candles) - 1
+            IF candles[i].close > HH or HH == Null
+                HH <- candles[i].close
+
+            IF candles[i].close < LL or LL == Null
+                LL <- candles[i].close
+        
+        SO <- ((candles[-1] - LL) / (HH - LL) )* 100
+        return (SO)
+    
+    PROCESS BB(candles)
+        total <- 0
+        FOR i -> len(candles)
+            total <- total + candles[i].close
+        mean <- total/len(candles)
+        deviation = []
+        FOR i -> len(candles)
+            deviation.append((candles[i].close - mean)**2)
+        total <- 0
+        FOR i -> len(deviation)
+            total <- total + deviation[i]
+        variance <- total / len(deviation)
+        std_dev <- variance**1/2
+        upper_band <- output[0] + (2  * std_dev)
+        lower_band <- output[0] - (2  * std_dev)
+        return (upper_band, lower_band)
+
+    PROCESS ATR(candles)
+        total <- 0
+        FOR i -> len(candles) - 1
+            total <- max of ((candles[i+1].high - candles[i+1].low), (abs(candles[i+1].high - candles[i].close)), (abs(candles[i+1].low - candles[i].close))) + total
+        ATR <- total /( len(candles) - 1 )
+        return (ATR)
+
+    PROCESS ROC(candles)
+        ROC <- ((candles[-1].close - candles[0].close) / candles[0].close) * 100
+        return(ROC)
+
+    PROCESS PC(candles)
+        PC = (candles[-1].close - candles[-2].close) / candles[-2].close
+        return (PC)
+
+    PROCESS LR(candles)
+        LR = log(candles[-1].close / candles[-2].close)
+        return (LR)
+
+    output.append(SMA(candles))
+    output.append(EMA(candles))
+    output.append(RSI(candles))
+    output.append(SO(candles))
+    a, b <- BB(candles)
+    output.append(a)
+    output.append(b)
+    output.append(ATR(candles))
+    output.append(ROC(candles))
+    output.append(PC(candles))
+    output.append(LR(candles))
+    return output
+
+PROCESS normalise_data(arr data)
+    highest_value <- -9999999999999999999
+    FOR i -> len(data)
+        IF data[i] > highest_value
+            highest_value <- data[i]
+    FOR i -> len(data)
+        data[i] <- data[i] / highest_value
+    return data
+
+PROCESS form_data(iteration)
+    final <- []
+    FOR i -> 20
+        final.append(select("*", "AAPL", str("ID =" + 20 * iteration + i)))
+    indicators <- Indicators(final)
+    FOR i -> len(indicators)
+        final.append(indicators[i])
+    final <- normalise_data(final)
+    return final
