@@ -116,4 +116,16 @@ PROCESS form_data(iteration)
     FOR i -> len(indicators)
         final.append(indicators[i])
     final <- normalise_data(final)
+    final <-  convert final to a matrix with dims (len(final) x 1)
+
+
+
+    {
+        final = np.array(final)
+        final = arr.reshape((len(final), 1))
+    }
+
+
+
+
     return final
