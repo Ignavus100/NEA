@@ -25,11 +25,11 @@ PROCESS Indicators(ARR candles)
         g <- 0
         l <- 0
         FOR i ->len(candles) - 1
-            IF candles[i+1] > candles[i]
-                Gain <- Gain + candles[i+1] - candles[i]
+            IF candles[i+1].close > candles[i].close
+                Gain <- Gain + candles[i+1].close - candles[i].close
                 g <- g + 1
             ELSE
-                Loss <- Loss + candles[i] - candles[i+1]
+                Loss <- Loss + candles[i].close - candles[i+1].close
                 l <- l + 1
         avgGain <- Gain/g
         avgLoss <- Loss/l
@@ -117,15 +117,5 @@ PROCESS form_data(iteration)
         final.append(indicators[i])
     final <- normalise_data(final)
     final <-  convert final to a matrix with dims (len(final) x 1)
-
-
-
-    {
-        final = np.array(final)
-        final = arr.reshape((len(final), 1))
-    }
-
-
-
 
     return final
