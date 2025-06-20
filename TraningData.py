@@ -115,11 +115,12 @@ def Normalise_data(data):
 def form_data(iteration):
     final = []
     for i in range(20):
-        temp1 = select("*", "AAPL", str("ID =" + str(20 * iteration + i)))
+        temp1 = select("*", "AAPL", str("ID =" + str(20 * iteration + i + 1)))
         temp2 = []
         for j in range(len(temp1[0])):
             temp2.append(temp1[0][j])
         final.append(temp2)
+    candles = final
     indicators = []
     indicators = Indicators(final)
     final.append(indicators)
@@ -131,9 +132,6 @@ def form_data(iteration):
             temp.append(final[i][j])
     final = temp
     final = np.array(final)
-    print(len(final))
     final = final.reshape(len(final), 1)
 
-    return final
-
-print(form_data(10))
+    return final, candles

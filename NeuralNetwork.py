@@ -25,7 +25,7 @@ class Network:
     
     def backwards(self):
         #call the back pass on the first layer
-        self.layers[0].backwards()
+        self.layers[0].backwards(self.layers)
 
 class Layer:
     def __init__(self, prev_neuron_amount, curr_neuron_amount, network, current_layer):
@@ -52,7 +52,7 @@ class Layer:
 
     def forward(self):
         #doing the weighted sum on all of the layers untill all activations are filled
-        while self.activation[0] != None:
+        while self.activation[0][0] != None:
             if self.prev_layer != None:
                 self.activation = SIG(self.weights * self.prev_layer.activation + self.bias)
             else:
@@ -73,7 +73,7 @@ class Layer:
     
     def backwards(self, network):
         #filling the network with activations on the forward pass
-        network.forward()
+        network[-1].forward()
         #calculate the cost of the forward pass
         self.cost = self.cost_calculation(self.y)
 
