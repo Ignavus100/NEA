@@ -4,18 +4,18 @@ from random import *
 
 class Network:
     def __init__(self, inp_size, out_size, hidden_amount, hidden_size):
-        layers = []
-        y = np.matrix()#TODO: from traning file
+        self.layers = []
+        y = np.matrix(1)#TODO: from traning file
         #instantiate the input layer
-        layers.append(Layer(0, inp_size, self.layers, 0))
+        self.layers.append(Layer(0, inp_size, self.layers, 0))
         #instantiate the hidden layers
         for i in range(hidden_amount):
             if i == 0:
-                layers.append(Layer(inp_size, hidden_size, self.layers, i + 1))
+                self.layers.append(Layer(inp_size, hidden_size, self.layers, i + 1))
             else:
-                layers.append(Layer(hidden_size, hidden_size, self.layers, i + 1))
+                self.layers.append(Layer(hidden_size, hidden_size, self.layers, i + 1))
         #instantiate the output lauer
-        layers.append(Layer(hidden_size, out_size, self.layers, i + 2))
+        self.layers.append(Layer(hidden_size, out_size, self.layers, i + 2))
 
     def forward(self):
         #calling forward pass on the last layer
@@ -45,8 +45,8 @@ class Layer:
         #instantiate the bias matrix
         self.bias = np.full((prev_neuron_amount, 1), 5)
         #assign the expected ouput y to the output layer and assinging the others zeroes in the correct dims
-        if current_layer == len(network.layers) - 1:
-            y = network.y
+        if current_layer == len(self.network) - 1:
+            y = self.network[-1]
         else:
             y = np.full((curr_neuron_amount, 1), 0)
 

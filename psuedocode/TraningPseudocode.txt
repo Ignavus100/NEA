@@ -1,0 +1,32 @@
+IMPORT all FROM traningData
+IMPORT all FROM NeuralNetwork
+IMPORT Pickle as pkl
+
+PROCESS calculateY(data)
+    h <- fetch candle(data[20].ID + 20)
+    if h not inside the bounds made by BB(data, SMA(data))
+        if h above bounds
+            Y = 1
+        else
+            Y = 0
+    else
+        Y = 0.5
+    return Y
+
+PROCESS runNN
+    if NN.pkl exists
+        NN <- pkl.load("NN.pkl")
+    else
+        NN <- Network(150, 1, 2, 16)
+    eopchs <- input("eopchs: ")
+    for j in range(epochs)
+        FOR i -> 30100/20
+            y <- []
+            y <- np.array(y)
+            data <- form_data(i)
+            y.append(calculateY(data))
+            NN.layers[0] = data
+            NN.y = y
+            NN.backwards()
+
+    pkl.saveModel("NN.pkl")
