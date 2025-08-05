@@ -4,9 +4,14 @@ from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 plt.style.use("dark_background")
 from RSI import *
+import pickle as pkl
+import numpy as np
+from TraningData import *
+from NeuralNetwork import *
+from DatabaseAccess import *
 
 client = polygon.RESTClient("DUEYmzwA2R9d8l5I18mNdycBZuHHYmXn")
-
+'''
 #OC-class to track data outside the animate function so it can be passed without complications
 class UpdateData():
     def __init__(self, currentBase, lowest, highest, bars):
@@ -65,9 +70,9 @@ class UpdateData():
             self.__Loss = []
             self.__Gain = []
 
-
-def GraphData():
-    '''
+'''
+#def GraphData(canvas, Fig, ax1, ax2, i, data, points, frame_width):
+'''
     #OC-Get user input for bars
     aggs = []
     start = "2024-11-29"
@@ -86,20 +91,34 @@ def GraphData():
     ):
         aggs.append(a)
 '''
-    aggs = select("*", "AAPL", "t > 1")
+'''    if i > frame_width:
+        aggs = select("*", "AAPL", f"ID <= {i} AND ID > {i-frame_width}")
+    else:
+        aggs = select("*", "AAPL", f"ID <= {i+1}")
     #OC-animation function that takes counter i and plots the data given from the API as a box plot
     def animate(i, data):
         #fig, (ax1, ax2) = plt.subplots(2)
-        ax1.cla()
-        ax2.cla()
-  
-        currentPoint = aggs[i]
+        #OC - creating the buy sell or remain signals
+        signal = "n"
+        if i % 20 == 0 and i != 0:
+            with open("NN_protect.pkl", "rb") as f:
+                NN = pkl.load(f)
+            NN_data, candles = form_data(i)
+            NN.layers[0].activation = NN_data
+            output, cost = NN.forward()
+            print(output)
+            if output.activation[0] == np.max(output):
+                signal = "b"
+            elif output.activation[1] == np.max(output):
+                signal = "s"
+
+        currentPoint = aggs[i % frame_width]
         p.append(currentPoint[5])
 
         #OC-making new average vals for the trendlines for iterations past the 14 threshold and graphing the RSI
         if i >= 14:
-            RSI(data, i)
-            ax2.plot(data.xVal, data.RSI)
+            RSI_1(data, i)
+            ax2.plot(data.xVal, data.RSI, color="#089981")
             data.NewAvg()
 
         #OC-applying the new values for gain and loss for RSI
@@ -110,10 +129,10 @@ def GraphData():
         else:
             data.NewVal(0, 0)
 
-        #OC-checking the timeframe gaps and creating a new bar if nececary
-        if (aggs[data.currentBase][5] + 3600000) < currentPoint[5]:
-            data.NewBase(i)
-            data.NewBar(currentPoint[3], currentPoint[2], currentPoint[5])
+        #OC-making a new bar
+        data.NewBase(i)
+        data.NewBar(currentPoint[3], currentPoint[2], currentPoint[5])
+        #if (aggs[data.currentBase][5] + 36000) < currentPoint[5]:
 
         #OC-defining the upper and lower quartiles
         lq = min(aggs[data.currentBase-1][1], currentPoint[1])
@@ -136,38 +155,110 @@ def GraphData():
             points.append([data.lowest, lq, aggs[data.currentBase - 1][1], uq, data.highest, bullish])
 
         #OC-making the bars the correct colour and size
-        for j in range(len(points)):
-            if points[j][5]:
-                ax1.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=True, showcaps=False, whis=(0, 100),
-                            boxprops=dict(facecolor="#f23645", color="#f23645"),
-                            whiskerprops=dict(color="#f23645"),
-                            capprops=dict(color="#f23645"),
-                            medianprops=dict(color="#f23645"))
+        print(points)
+        ax1.boxplot(points[j][:5], positions=[1])'''
+'''for j in range(len(points)):
+            if signal == "n":
+                if points[j][5]:
+                    ax1.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=True, showcaps=False, whis=(0, 100),
+                                boxprops=dict(facecolor="#f23645", color="#f23645"),
+                                whiskerprops=dict(color="#f23645"),
+                                capprops=dict(color="#f23645"),
+                                medianprops=dict(color="#f23645"))
 
+                else:
+                    ax1.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=True, showcaps=False, whis=(0, 100),
+                                boxprops=dict(facecolor="#089981", color="#089981"), 
+                                whiskerprops=dict(color="#089981"), 
+                                capprops=dict(color="#089981"), 
+                                medianprops=dict(color="#089981"))
             else:
-                ax1.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=True, showcaps=False, whis=(0, 100),
-                            boxprops=dict(facecolor="#089981", color="#089981"), 
-                            whiskerprops=dict(color="#089981"), 
-                            capprops=dict(color="#089981"), 
-                            medianprops=dict(color="#089981"))
+                if signal == "s":
+                    ax1.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=True, showcaps=False, whis=(0, 100),
+                                boxprops=dict(facecolor="#ffffff", color="#ffffff"),
+                                whiskerprops=dict(color="#ffffff"),
+                                capprops=dict(color="#ffffff"),
+                                medianprops=dict(color="#ffffff"))
+
+                else:
+                    ax1.boxplot(points[j][:5], positions=[j + 1], widths=0.8, patch_artist=True, showfliers=True, showcaps=False, whis=(0, 100),
+                                boxprops=dict(facecolor="#000000", color="#000000"), 
+                                whiskerprops=dict(color="#000000"), 
+                                capprops=dict(color="#000000"), 
+                                medianprops=dict(color="#000000"))
+                    '''
+'''return data, points
 
     #OC-label axis and graph and adding colour
-    fig, (ax1, ax2) = plt.subplots(2)
     #ax1._label("Date and Time")
     #ax1.ylabel("Price")
     #fig.title(f"{ticket} on {start}")
     #fig.gca().set_facecolor("#171b26")
     #fig.gcf().set_facecolor("#171b26")
     p=[]
-    points = []
-    data = UpdateData(0, aggs[0][3], aggs[0][2], 0)
+    
+    if i == 0:
+        data = UpdateData(0, aggs[0][3], aggs[0][2], 0)
+        points = []
 
 
     #OC-start the animation
-    ani = FuncAnimation(fig, animate, fargs=(data,), interval = 1000, frames = 1000, repeat = False)
+    #ani = FuncAnimation(Fig, animate, fargs=(data,), interval = 1000, frames = 1000, repeat = False)
+    data, points = animate(i, data)
 
     #OC-show the graph
-    plt.show()
-
+    canvas.draw()
+    return data, points
+'''
 #OC-run graphing function
-GraphData()
+#GraphData()
+
+def graph(frame_width, end_of_frame, canvas, main_axis):
+    main_axis.clear()
+    def create_candle(position_in_frame, absoloute_position):
+        candle_points = select("l, c, o, h", "AAPL", f"ID = {absoloute_position}")
+        plotting_points = []
+        plotting_points.append(candle_points[0][0])
+        plotting_points.append(min(candle_points[0][1], candle_points[0][2]))
+        plotting_points.append(candle_points[0][1])
+        plotting_points.append(max(candle_points[0][1], candle_points[0][2]))
+        plotting_points.append(candle_points[0][3])
+
+        signal = "n"
+        if absoloute_position % 20 == 0 and absoloute_position != 0:
+            with open("NN_protect.pkl", "rb") as f:
+                NN = pkl.load(f)
+            NN_data, candles = form_data(absoloute_position)
+            NN.layers[0].activation = NN_data
+            output, cost = NN.forward()
+            print(output)
+            if output.activation[0] == np.max(output):
+                signal = "b"
+            elif output.activation[1] == np.max(output):
+                signal = "s"
+
+        if candle_points[0][1] > candle_points[0][2]:
+            bullish = True
+        else:
+            bullish = False
+
+        return signal, plotting_points, bullish
+    
+    for i in range(min(frame_width, end_of_frame)):
+        signal, plotting_points, bullish = create_candle(i, end_of_frame - i)
+        #if signal == "n":
+        if bullish:
+            main_axis.boxplot(plotting_points, positions=[min(frame_width, end_of_frame)-i], widths=0.8, patch_artist=True, showfliers=True, showcaps=False, whis=(0, 100),
+                                boxprops=dict(facecolor="#f23645", color="#f23645"),
+                                whiskerprops=dict(color="#f23645"),
+                                capprops=dict(color="#f23645"),
+                                medianprops=dict(color="#f23645"))
+        else:
+            main_axis.boxplot(plotting_points, positions=[min(frame_width, end_of_frame)-i], widths=0.8, patch_artist=True, showfliers=True, showcaps=False, whis=(0, 100),
+                                boxprops=dict(facecolor="#089981", color="#089981"), 
+                                whiskerprops=dict(color="#089981"), 
+                                capprops=dict(color="#089981"), 
+                                medianprops=dict(color="#089981"))
+
+
+    canvas.draw()

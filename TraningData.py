@@ -4,12 +4,14 @@ import numpy as np
 
 
 def SMA(candles):
+    #calculating the simple moving average
     total = 0
     for i in range(len(candles)):
         total += candles[i][1]
     return (total/len(candles))
 
 def EMA(candles):
+    #calculating the exponential moving average
     closes = []
     span = 10
     multiplyer = 2/(span + 1)
@@ -21,6 +23,7 @@ def EMA(candles):
     return ema[-1]
 
 def RSI(candles):
+    #calculating the relative strength index
     Gain = 0
     Loss = 0
     g = 0
@@ -39,6 +42,7 @@ def RSI(candles):
     return RSI
 
 def SO(candles):
+    #calculating the stochastic oscilator
     HH = None
     LL = None
     for i in range(len(candles) - 1):
@@ -51,6 +55,7 @@ def SO(candles):
     return SO
 
 def BB(candles, output):
+    #calculating the bollinger bands
     total = 0
     for i in range(len(candles)):
         total += candles[i][1]
@@ -68,6 +73,7 @@ def BB(candles, output):
     return upper_band, lower_band
 
 def ATR(candles):
+    #calculating the average true range
     total = 0
     for i in range(len(candles) - 1):
         total = np.max([(candles[i+1][2] - candles[i+1][3])  ,  (np.abs(candles[i+1][2] - candles[i][1]))  ,  (np.abs(candles[i+1][3] - candles[i][1]))]) + total
@@ -75,19 +81,23 @@ def ATR(candles):
     return ATR
 
 def ROC(candles):
+    #calculating the rate of change
     ROC = ((candles[-1][1] - candles[0][1]) / candles[0][1]) * 100
     return ROC
 
 def PC(candles):
+    #calculating the price channel
     PC = (candles[-1][1] - candles[-2][1]) / candles[-2][1]
     return PC
 
 def LR(candles):
+    #calculating the linear regression
     LR = np.log10(candles[-1][1] / candles[-2][1])
     return LR
 
 
 def Indicators(candles):
+    #groupung all indicators to an array
     output = []
     output.append(SMA(candles))
     output.append(EMA(candles))
@@ -103,6 +113,7 @@ def Indicators(candles):
     return output
 
 def Normalise_data(data):
+    #making all data between 0-1
     highest_value = -9999999999999999999999999999999999999999999999999999999999
     for i in range(len(data)):
         if data[i] > highest_value:
@@ -113,6 +124,7 @@ def Normalise_data(data):
     return data
 
 def form_data(iteration):
+    #creating a single array for every 20 candles which means that it can be passed into the NN
     final = []
     for i in range(20):
         temp1 = select("*", "AAPL", str("ID =" + str(20 * iteration + i + 1)))

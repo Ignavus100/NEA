@@ -48,6 +48,7 @@ class Layer:
             self.y = np.full((curr_neuron_amount, 1), 10000)
 
     def start(self, current_layer):
+        #defining the previous and next layers for the datatype
         if current_layer != 0:
             self.prev_layer = self.network[current_layer - 1]
         else:
