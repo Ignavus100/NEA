@@ -215,14 +215,17 @@ class UpdateData():
 
 def graph(frame_width, end_of_frame, canvas, main_axis):
     main_axis.clear()
-    def create_candle(position_in_frame, absoloute_position):
-        candle_points = select("l, c, o, h", "AAPL", f"ID = {absoloute_position}")
+    main_axis.set_xlim(0, frame_width + 0.5)
+    candle_points = select("l, c, o, h", "AAPL", f"ID <= {end_of_frame} AND ID > {end_of_frame - frame_width}")
+
+    def create_candle(position_in_frame, absoloute_position, candle_points, Max):
+        candle_points = candle_points[Max - position_in_frame - 1]
         plotting_points = []
-        plotting_points.append(candle_points[0][0])
-        plotting_points.append(min(candle_points[0][1], candle_points[0][2]))
-        plotting_points.append(candle_points[0][1])
-        plotting_points.append(max(candle_points[0][1], candle_points[0][2]))
-        plotting_points.append(candle_points[0][3])
+        plotting_points.append(candle_points[0])
+        plotting_points.append(min(candle_points[1], candle_points[2]))
+        plotting_points.append(candle_points[1])
+        plotting_points.append(max(candle_points[1], candle_points[2]))
+        plotting_points.append(candle_points[3])
 
         signal = "n"
         if absoloute_position % 20 == 0 and absoloute_position != 0:
@@ -237,7 +240,7 @@ def graph(frame_width, end_of_frame, canvas, main_axis):
             elif output.activation[1] == np.max(output):
                 signal = "s"
 
-        if candle_points[0][1] > candle_points[0][2]:
+        if candle_points[1] > candle_points[2]:
             bullish = True
         else:
             bullish = False
@@ -245,7 +248,7 @@ def graph(frame_width, end_of_frame, canvas, main_axis):
         return signal, plotting_points, bullish
     
     for i in range(min(frame_width, end_of_frame)):
-        signal, plotting_points, bullish = create_candle(i, end_of_frame - i)
+        signal, plotting_points, bullish = create_candle(i, end_of_frame - i, candle_points, min(frame_width, end_of_frame))
         #if signal == "n":
         if bullish:
             main_axis.boxplot(plotting_points, positions=[min(frame_width, end_of_frame)-i], widths=0.8, patch_artist=True, showfliers=True, showcaps=False, whis=(0, 100),

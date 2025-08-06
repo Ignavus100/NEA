@@ -39,15 +39,30 @@ class TradingPannel(tk.CTkFrame):
         tk.CTkFrame.__init__(self, master, **kwargs)
         frame_width = 15
 
-        #the code for graphing in tkinter --------------- START
+        #_______________TOOLBAR_______________START
+        toolbar = tk.CTkFrame(self)
+
+        button1 = tk.CTkButton(toolbar, text="Next candle", command=lambda: plot(canvas, fig, ax1, frame_width))
+        button1.pack(pady=12, padx=10, side="right")
+
+        button2 = tk.CTkButton(toolbar, text="Play", command=lambda: play())
+        button2.pack(pady=12, padx=10, side="right")
+
+        button3 = tk.CTkButton(toolbar, text="Buy", command=lambda: buy_logic())
+        button3.pack(pady=12, padx=10, side="left")
+
+        button4 = tk.CTkButton(toolbar, text="Sell", command=lambda: sell_logic())
+        button4.pack(pady=12, padx=10, side="left")
+
+        toolbar.pack(side="top", fill="x")
+        #_______________TOOLBAR_______________END
+
+        #______________________GRAPHING____________________ START
         fig, (ax1) = plt.subplots(1)
         canvas = FigureCanvasTkAgg(fig, self)
-        GDData, GDPoints = plot(canvas, fig, ax1, None, [], [], frame_width)
+        plot(canvas, fig, ax1, frame_width)
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        #the code for graphing in tkinter --------------- END
-
-        button1 = tk.CTkButton(self, text="Next candle", command=lambda: plot(canvas, fig, ax1, None, GDData, GDPoints, frame_width))
-        button1.pack(pady=12, padx=10)
+        #______________________GRAPHING____________________ END
 
 
 class login(tk.CTkFrame):
@@ -126,23 +141,19 @@ def stop(fig):
     plt.close(fig)
 
 
-def plot(canvas, fig, ax1, ax2, GDData, GDPoints, frame_width):
-    Temp_points = []
-    
-    if len(GDPoints) > frame_width:
-        for i in range(frame_width):
-            Temp_points.append(None)
-        for i in range(frame_width):
-            Temp_points[frame_width - i - 1] = GDPoints[-i]
-    else:
-        Temp_points = GDPoints
-
+def plot(canvas, fig, ax1, frame_width):
     graph(frame_width, I.i, canvas, ax1)
     I.i += 1
     stop(fig)
-    return GDData, GDPoints
 
+def buy_logic():
+    pass
 
+def sell_logic():
+    pass
+
+def play():
+    pass
 #tk.set_appearance_mode("system")
 #tk.set_default_color_theme("blue")
 
