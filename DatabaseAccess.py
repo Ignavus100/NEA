@@ -83,5 +83,5 @@ timeframe = "minute"
 
  """
 #CREATION OF THE USERS DATABASE RUN ONCE
-#Create("UserData", "UserID AUTOINCRAMENT PRIMARY KEY, Forename VARCHAR, Surname VARCHAR, Username VARCHAR, HashedPassword INT")
+#Create("UserData", "UserID AUTOINCRAMENT PRIMARY KEY, Forename VARCHAR, Surname VARCHAR, Username VARCHAR, HashedPassword INT, Balance INT")
 #Create("UserTrades", "TradeID AUTOINCREMENT PRIMARY KEY, UserID INT, TradeOpen DOUBLE, TradeClose DOUBLE, AmountPlaced INT, ProfitMade INT")
