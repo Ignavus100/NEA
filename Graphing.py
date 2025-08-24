@@ -216,6 +216,9 @@ class UpdateData():
 def graph(frame_width, end_of_frame, canvas, main_axis):
     main_axis.clear()
     main_axis.set_xlim(0, frame_width + 0.5)
+    main_axis.set_title("Candles")
+    main_axis.set_xlabel("candle number")
+    main_axis.set_ylabel("price")
     candle_points = select("l, c, o, h", "AAPL", f"ID <= {end_of_frame} AND ID > {end_of_frame - frame_width}")
 
     def create_candle(position_in_frame, absoloute_position, candle_points, Max):
@@ -265,3 +268,9 @@ def graph(frame_width, end_of_frame, canvas, main_axis):
 
 
     canvas.draw()
+
+
+
+def plot_indicator(frame_width, end_of_frame, canvas, main_axis):
+    main_axis.set_title("indicator")
+    canvas.draw()#IDK how to do this no more

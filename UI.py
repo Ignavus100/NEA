@@ -64,22 +64,22 @@ class TradingPannel(tk.CTkFrame):
         #_______________TOOLBAR_______________START
         toolbar = tk.CTkFrame(self)
 
-        button1 = tk.CTkButton(toolbar, text="Next candle", command=lambda: plot(canvas, fig, ax1, I.frame_width, True))
+        button1 = tk.CTkButton(toolbar, text="Next candle", command=lambda: plot(canvas1, fig1, ax1, I.frame_width, True))
         button1.pack(pady=12, padx=10, side="right")
 
-        button2 = tk.CTkButton(toolbar, text="Play", command=lambda: toggle_play_pause(self, button2, canvas, fig, ax1, I.frame_width, True))
+        button2 = tk.CTkButton(toolbar, text="Play", command=lambda: toggle_play_pause(self, button2, canvas1, fig1, ax1, I.frame_width, True))
         button2.pack(pady=12, padx=10, side="right")
         
-        slider = tk.CTkSlider(toolbar, from_=2, to=100, command=lambda value: change_frame_width(value, canvas, fig, ax1))
+        slider = tk.CTkSlider(toolbar, from_=2, to=100, command=lambda value: change_frame_width(value, canvas1, fig1, ax1))
         slider.pack(pady=12, padx=10, side="right")
 
         sliderLBL = tk.CTkLabel(toolbar,  text="Frame Width")
         sliderLBL.pack(pady=12, padx=4, side="right")
 
-        button3 = tk.CTkButton(toolbar, 24, text=">", command=lambda: move_left(canvas, fig, ax1))
+        button3 = tk.CTkButton(toolbar, 24, text="->", command=lambda: move_left(canvas1, fig1, ax1))
         button3.pack(pady=12, padx=5, side="right")
 
-        button4 = tk.CTkButton(toolbar, 24, text="<", command=lambda: move_right(canvas, fig, ax1))
+        button4 = tk.CTkButton(toolbar, 24, text="<-", command=lambda: move_right(canvas1, fig1, ax1))
         button4.pack(pady=12, padx=5, side="right")
 
         button5 = tk.CTkButton(toolbar, text="Buy", command=lambda: toggle_buy_stop(button5, entry1.get(), amountLBL))
@@ -97,6 +97,14 @@ class TradingPannel(tk.CTkFrame):
         amountLBL = tk.CTkLabel(toolbar, text=f"Balance: £{I.balance / 100}")
         amountLBL.pack(pady=12, padx=4, side="left")
 
+        indicators = ["1", "2", "3", "4"]
+        dropdown = tk.CTkComboBox(toolbar, values=indicators, width=200)
+        dropdown.set("select an indicator")
+        dropdown.pack(pady=3, padx=15)
+
+        button7 = tk.CTkButton(toolbar, text="Load Indicator", command=lambda: load_indicator(dropdown.get(), canvas2, ax2, self))
+        button7.pack(pady=3, padx=10)
+
         toolbar.pack(side="top", fill="x")
         #_______________TOOLBAR_______________END
 
@@ -106,19 +114,35 @@ class TradingPannel(tk.CTkFrame):
 
 
 
-        #______________________GRAPHING____________________ START
-        fig, (ax1) = plt.subplots(1)
-        canvas = FigureCanvasTkAgg(fig, self)
-        plot(canvas, fig, ax1, I.frame_width, True)
+        #______________________GRAPHING THE CANDLES____________________ START
+        fig1, (ax1) = plt.subplots(1)
+        canvas1 = FigureCanvasTkAgg(fig1, self)
+        plot(canvas1, fig1, ax1, I.frame_width, True)
 
 
         #______________________UPDATE______________________ START
-        reload_trading(self, canvas, fig, ax1, amountLBL)
+        reload_trading(self, canvas1, fig1, ax1, amountLBL)
         #______________________UPDATE______________________ END
 
 
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        #______________________GRAPHING____________________ END
+        canvas1.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        #______________________GRAPHING THE CANDLES____________________ END
+
+
+
+
+        #______________________GRAPHING THE INDICATORS____________________ START
+        fig2, (ax2) = plt.subplots(1)
+        canvas2 = FigureCanvasTkAgg(fig2, self)
+
+
+        #______________________UPDATE______________________ START
+        load_indicator(self, canvas2, fig2, ax2, amountLBL)
+        #______________________UPDATE______________________ END
+
+
+        canvas2.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        #______________________GRAPHING THE INDICATORS____________________ END
         
 
 
@@ -199,6 +223,7 @@ def login_logic(username, password, master):
         I.UserID = data[0][0]
         I.balance = data[0][1]
         I.i = data[0][2]
+        I.temp_end = data[0][2]
         I.started = True
     else:
         CTkMessagebox(title="Error", message="The username or password is incorrect")
@@ -366,6 +391,17 @@ def reload_trading(root1, canvas, fig, ax1, amountLBL):
         amountLBL.configure(text=f"Balance: £{I.balance / 100}")
         I.started = False
     root1.after(100, lambda: reload_trading(root1, canvas, fig, ax1, amountLBL))
+
+
+
+def load_indicator(indicator, canvas, ax1, self, ax2=None):
+    if indicator == "select an indicator":
+        CTkMessagebox(title="Error", message="You must select an option.")
+    else:
+        pass
+    #TODO: logic for the graphing of the indicators in the Graphing.py file
+
+
 
 
 #ALL THE LOGIC TO THE BUTTONS ETC.____________________________________________________________________________________END
