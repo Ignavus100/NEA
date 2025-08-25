@@ -4,7 +4,7 @@ from Graphing import *
 from DatabaseAccess import *
 from Login import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from time import sleep
+import webbrowser
 
 
 #DATA STORE_____________________START
@@ -43,7 +43,7 @@ class Main(tk.CTk):
         self.frames = {}
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
-        for frame in (login, sign_up, TradingPannel):#all neccecary frames
+        for frame in (login, sign_up, TradingPannel, stats_page):#all neccecary frames
             f = frame(self)
             f.grid(row=0, column=0, sticky="nsew")
             self.frames[frame] = f
@@ -108,11 +108,22 @@ class TradingPannel(tk.CTkFrame):
         button7.pack(pady=3, padx=10)
 
         toolbar.pack(side="top", fill="x")
+
+
         #_______________TOOLBAR_______________END
 
 
 
-     
+        toolbar2 = tk.CTkFrame(self)
+
+        button8 = tk.CTkButton(toolbar2, text="stats page", command=lambda: master.switch(stats_page))
+        button8.pack(pady=12, padx=10, side="right")
+
+        link1 = tk.CTkLabel(toolbar2, text="Info", fg="blue", cursor="hand2")
+        link1.pack(pady=12, padx=10, side="right")
+        link1.bind("<Button-1>", lambda e: RunLink("github link"))
+
+        toolbar2.pack(side="bottom", fill="x")
 
 
 
@@ -145,7 +156,8 @@ class TradingPannel(tk.CTkFrame):
 
         canvas2.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         #______________________GRAPHING THE INDICATORS____________________ END
-        
+
+
 
 
 
@@ -168,8 +180,6 @@ class login(tk.CTkFrame):
         button2 = tk.CTkButton(self, text="Sign up", command=lambda: master.switch(sign_up), fg_color="grey17", hover_color="grey20")
         button2.pack(pady=12, padx=10)
 
-        button3 = tk.CTkButton(self, text="Cheat", command=lambda: master.switch(TradingPannel))
-        button3.pack(pady=12, padx=10)
 
 
 
@@ -198,6 +208,23 @@ class sign_up(tk.CTkFrame):
 
         button2 = tk.CTkButton(self, text="Login", command=lambda: master.switch(login), fg_color="grey17", hover_color="grey20")
         button2.pack(pady=12, padx=10)
+
+
+class stats_page(tk.CTkFrame):
+    def __init__(self, master=None, **kwargs):
+        tk.CTkFrame.__init__(self, master, **kwargs)
+
+        label1 = tk.CTkLabel(self, text="Your trades")
+        label1.pack(pady=12, padx=10)
+
+        button1 = tk.CTkButton(self, text="load", command=lambda: load_trades(label2))
+        button1.pack(pady=12, padx=10)
+
+        label2 = tk.CTkLabel(self, text="")
+        label2.pack(pady=12, padx=10)
+
+        button2 = tk.CTkButton(self, text="trading pannel", command=lambda: master.switch(TradingPannel))
+        button2.pack(pady=3, padx=10)
 
 
 #FRAMES_________________________________________________________________________END
@@ -410,6 +437,21 @@ def load_indicator(frame_width, end_of_frame, canvas, main_axis, indicator):
 
 
 
+def load_trades(label):
+    if I.UserID == 0:
+        pass
+    else:
+        text = ""
+        data = select("TradeOpen, TradeClose, AmountPlaced, ProfitMade", "UserTrades", f"UserID = {str(I.UserID)}")
+        text += "Trade Open          Trade Close (p)      Amount Placed (p)      Profit Made (p)      \n"
+        for i in range(len(data)):
+            text += (f"{str(data[i][0]) + ' ' * (17 - len(str(data[i][0])))}   {str(data[i][1]) + ' ' * (18 - len(str(data[i][1])))}   {str(data[i][2]) + ' ' * (20 - len(str(data[i][2])))}   {str(data[i][3]) + ' ' * (18 - len(str(data[i][3])))}   \n")
+        label.configure(text=text, font=("Courier", 24))
+
+
+
+def RunLink(link):
+    webbrowser.open_new(link)
 
 #ALL THE LOGIC TO THE BUTTONS ETC.____________________________________________________________________________________END
 
