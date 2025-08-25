@@ -119,9 +119,9 @@ class TradingPannel(tk.CTkFrame):
         button8 = tk.CTkButton(toolbar2, text="stats page", command=lambda: master.switch(stats_page))
         button8.pack(pady=12, padx=10, side="right")
 
-        link1 = tk.CTkLabel(toolbar2, text="Info", fg="blue", cursor="hand2")
+        link1 = tk.CTkLabel(toolbar2, text="Info", text_color="white", cursor="hand2")
         link1.pack(pady=12, padx=10, side="right")
-        link1.bind("<Button-1>", lambda e: RunLink("github link"))
+        link1.bind("<Button-1>", lambda e: RunLink("https://ignavus100.github.io/NEA/"))
 
         toolbar2.pack(side="bottom", fill="x")
 
