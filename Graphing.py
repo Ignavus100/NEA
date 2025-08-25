@@ -213,11 +213,10 @@ class UpdateData():
 #OC-run graphing function
 #GraphData()
 
-def graph(frame_width, end_of_frame, canvas, main_axis):
+def graph(frame_width, end_of_frame, canvas, main_axis, I):
     main_axis.clear()
     main_axis.set_xlim(0, frame_width + 0.5)
     main_axis.set_title("Candles")
-    main_axis.set_xlabel("candle number")
     main_axis.set_ylabel("price")
     candle_points = select("l, c, o, h", "AAPL", f"ID <= {end_of_frame} AND ID > {end_of_frame - frame_width}")
 
@@ -230,7 +229,7 @@ def graph(frame_width, end_of_frame, canvas, main_axis):
         plotting_points.append(max(candle_points[1], candle_points[2]))
         plotting_points.append(candle_points[3])
 
-        signal = "n"
+
         if absoloute_position % 20 == 0 and absoloute_position != 0:
             with open("NN_protect.pkl", "rb") as f:
                 NN = pkl.load(f)
@@ -239,9 +238,13 @@ def graph(frame_width, end_of_frame, canvas, main_axis):
             output, cost = NN.forward()
             print(output)
             if output.activation[0] == np.max(output):
-                signal = "b"
+                signal = "buy"
             elif output.activation[1] == np.max(output):
-                signal = "s"
+                signal = "sell"
+            else:
+                signal = "remain"
+        else:
+            signal = "None"
 
         if candle_points[1] > candle_points[2]:
             bullish = True
@@ -249,10 +252,10 @@ def graph(frame_width, end_of_frame, canvas, main_axis):
             bullish = False
 
         return signal, plotting_points, bullish
-    
+    ticks = []
+    x = []
     for i in range(min(frame_width, end_of_frame)):
-        signal, plotting_points, bullish = create_candle(i, end_of_frame - i, candle_points, min(frame_width, end_of_frame))
-        #if signal == "n":
+        signal, plotting_points, bullish = create_candle(i, I - min(frame_width, I) + i + 1, candle_points, min(frame_width, end_of_frame))
         if bullish:
             main_axis.boxplot(plotting_points, positions=[min(frame_width, end_of_frame)-i], widths=0.8, patch_artist=True, showfliers=True, showcaps=False, whis=(0, 100),
                                 boxprops=dict(facecolor="#f23645", color="#f23645"),
@@ -265,12 +268,53 @@ def graph(frame_width, end_of_frame, canvas, main_axis):
                                 whiskerprops=dict(color="#089981"), 
                                 capprops=dict(color="#089981"), 
                                 medianprops=dict(color="#089981"))
+            
+        if signal == "None":
+            ticks.append(str(I - min(frame_width, I) + i + 1))
+        else:
+            ticks.append(signal)
+        x.append(i+1)
+            
 
+    main_axis.set_xticks(x, ticks, rotation=45)
 
     canvas.draw()
 
 
 
-def plot_indicator(frame_width, end_of_frame, canvas, main_axis):
-    main_axis.set_title("indicator")
-    canvas.draw()#IDK how to do this no more
+
+def plot_indicator(frame_width, end_of_frame, canvas, main_axis, indicator):
+    func_map = {
+        "RSI":RSI,
+        "SMA":SMA,
+        "EMA":EMA,
+        "SO":SO,
+        "ATR":ATR,
+        "ROC":ROC,
+        "PC":PC,
+        "LR":LR
+    }
+    final = []
+    if end_of_frame > 39:
+        points = select("*", "AAPL", str("ID >=" + str(end_of_frame - 39) + "AND ID <=" + str(end_of_frame)))
+        candles = []
+        result = []
+        for i in range(len(points)):
+            temp1 = points[i]
+            temp2 = []
+            for j in range(len(temp1)):
+                temp2.append(temp1[j])
+            final.append(temp2)
+        candles.append(final)
+        for i in range(20):
+            result.append(func_map[indicator](candles[0][i:(i + 20)]))
+
+
+        main_axis.clear()
+        main_axis.set_xlim(0, frame_width + 0.5)
+        main_axis.set_title(f"{indicator}")
+        result = np.array(result)
+        main_axis.plot(result)
+        canvas.draw()
+    else:
+        return False

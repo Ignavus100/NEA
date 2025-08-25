@@ -24,6 +24,7 @@ def EMA(candles):
 
 def RSI(candles):
     #calculating the relative strength index
+    print(candles)
     Gain = 0
     Loss = 0
     g = 0
@@ -126,11 +127,13 @@ def Normalise_data(data):
 def form_data(iteration):
     #creating a single array for every 20 candles which means that it can be passed into the NN
     final = []
+    data = select("*", "AAPL", str("ID >=" + str(20 * iteration + 1) + "AND ID <=" + str(20 * iteration + 21)))
     for i in range(20):
-        temp1 = select("*", "AAPL", str("ID =" + str(20 * iteration + i + 1)))
+        print(i)
+        temp1 = data[i]
         temp2 = []
-        for j in range(len(temp1[0])):
-            temp2.append(temp1[0][j])
+        for j in range(len(temp1)):
+            temp2.append(temp1[j])
         final.append(temp2)
     candles = final
     indicators = []

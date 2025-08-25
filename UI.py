@@ -21,6 +21,8 @@ class DataStore:
         self.temp_end = 0
         self.balance = 10000000
         self.started = False
+        self.first_run = True
+        self.NN_output = []
 
 I = DataStore()
 #DATA STORE_____________________END
@@ -97,12 +99,12 @@ class TradingPannel(tk.CTkFrame):
         amountLBL = tk.CTkLabel(toolbar, text=f"Balance: £{I.balance / 100}")
         amountLBL.pack(pady=12, padx=4, side="left")
 
-        indicators = ["1", "2", "3", "4"]
+        indicators = ["RSI", "EMA", "SMA", "SO", "ATR", "ROC", "PC"]
         dropdown = tk.CTkComboBox(toolbar, values=indicators, width=200)
         dropdown.set("select an indicator")
         dropdown.pack(pady=3, padx=15)
 
-        button7 = tk.CTkButton(toolbar, text="Load Indicator", command=lambda: load_indicator(dropdown.get(), canvas2, ax2, self))
+        button7 = tk.CTkButton(toolbar, text="Load Indicator", command=lambda: load_indicator(frame_width=I.frame_width, end_of_frame=I.i, canvas=canvas2, main_axis=ax2, indicator=dropdown.get()))
         button7.pack(pady=3, padx=10)
 
         toolbar.pack(side="top", fill="x")
@@ -137,7 +139,7 @@ class TradingPannel(tk.CTkFrame):
 
 
         #______________________UPDATE______________________ START
-        load_indicator(self, canvas2, fig2, ax2, amountLBL)
+        load_indicator(frame_width=I.frame_width, end_of_frame=I.i, canvas=canvas2, main_axis=ax2, indicator=dropdown.get())
         #______________________UPDATE______________________ END
 
 
@@ -257,7 +259,7 @@ def plot(canvas, fig, ax1, frame_width, incrament):
     if incrament:
         I.i += 1
         I.temp_end += 1
-    graph(frame_width, I.i, canvas, ax1)
+    graph(frame_width, I.i, canvas, ax1, I.i)
     stop(fig)
 
 
@@ -276,17 +278,17 @@ def change_frame_width(value, canvas, fig, ax1):
 
 
 def move_left(canvas, fig, ax1):
-    I.temp_end += 1
-    if I.temp_end <= I.i and I.temp_end >= I.frame_width:
-        graph(I.frame_width, I.temp_end, canvas, ax1)
+    if I.temp_end <= I.i - 1 and I.temp_end + 1 >= I.frame_width:
+        I.temp_end += 1
+        graph(I.frame_width, I.temp_end, canvas, ax1, I.temp_end)
     stop(fig)
 
 
 
 def move_right(canvas, fig, ax1):
-    I.temp_end -= 1
-    if I.temp_end <= I.i and I.temp_end >= I.frame_width:
-        graph(I.frame_width, I.temp_end, canvas, ax1)
+    if I.temp_end - 1 <= I.i and I.temp_end - 1 >= I.frame_width:
+        I.temp_end -= 1
+        graph(I.frame_width, I.temp_end, canvas, ax1, I.temp_end)
     stop(fig)
 
 
@@ -394,12 +396,17 @@ def reload_trading(root1, canvas, fig, ax1, amountLBL):
 
 
 
-def load_indicator(indicator, canvas, ax1, self, ax2=None):
+def load_indicator(frame_width, end_of_frame, canvas, main_axis, indicator):
     if indicator == "select an indicator":
-        CTkMessagebox(title="Error", message="You must select an option.")
+        if not I.first_run:
+            CTkMessagebox(title="Error", message="You must select an indicator.")
+        else:
+            I.first_run = False
+    elif int(end_of_frame) < 40:
+        CTkMessagebox(title="Error", message="You must produce 40 candles before an indicator can be used.")
     else:
-        pass
-    #TODO: logic for the graphing of the indicators in the Graphing.py file
+        end_of_frame = int(end_of_frame)
+        plot_indicator(frame_width, end_of_frame, canvas, main_axis, indicator)
 
 
 
